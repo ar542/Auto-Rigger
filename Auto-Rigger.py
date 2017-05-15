@@ -1958,7 +1958,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingerbones,handpreset):
         self.line.setFrameShadow(QtGui.QFrame.Sunken)
         self.line.setObjectName("line")
         self.horizontalLayout_2.addWidget(self.line)
-        self.rig_fingers_Button = QtGui.QPushButton(self.groupBox_4)
+        self.rig_fingers_Button = QtGui.QCheckBox(self.groupBox_4)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -2130,7 +2130,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingerbones,handpreset):
         
 #creates ui
     def retranslateUi(self, window):
-        window.setWindowTitle(QtGui.QApplication.translate("window", "Auto-Rigger V1.8", None, QtGui.QApplication.UnicodeUTF8))
+        window.setWindowTitle(QtGui.QApplication.translate("window", "Auto-Rigger V1.9", None, QtGui.QApplication.UnicodeUTF8))
 
         self.groupBox_2.setTitle(QtGui.QApplication.translate("window", "Left-side", None, QtGui.QApplication.UnicodeUTF8))
         self.label_22.setText(QtGui.QApplication.translate("window", "<html><head/><body><p align=\"right\">boneUpperLegL</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
