@@ -1084,16 +1084,17 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
     
     if (fingeropton):
         global rig_fingers,dag_fingers
+        
         rigfingers(boneHandR,rigHandR)
-        rig_finger_right=rig_fingers
-        bone_finger_right=dag_fingers
+        rig_finger_right=rig_fingers.copy()
+        bone_finger_right=dag_fingers[:]
         
-        rig_fingers=OrderedDict()
-        dag_fingers=[]       
+        rig_fingers.clear()
+        del dag_fingers[:]       
         
-        rigfingers(rigHandL,rigHandL)
-        rig_finger_left=rig_fingers
-        bone_finger_left=dag_fingers
+        rigfingers(boneHandL,rigHandL)
+        rig_finger_left=rig_fingers.copy()
+        bone_finger_left=dag_fingers[:]
 
         
     allRigHandles.extend(rig_finger_left.keys()+rig_finger_right.keys())
@@ -1200,7 +1201,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
 ######for fingers
     if (fingeropton):
         parent_rig_fingers(rigHandR,rig_finger_right)
-        parent_rig_fingers(rigHandL,rig_finger_right)
+        parent_rig_fingers(rigHandL,rig_finger_left)
 
 
 
@@ -1477,16 +1478,6 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
 
 """
 
-        
-
-
-
-
-
-
-
-
-
         if self.sp1.isChecked() :
             spine=1
             spine1=None
@@ -1544,22 +1535,25 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         ##handpresent
             
 
-        if self.finger_checkBox.isChecked() :
-            if self.finger_x.isChecked():
-                handpreset="'x'"
-            elif self.finger_y.isChecked():
-                handpreset="'y'"
-            elif self.finger_z.isChecked():
-                handpreset="'z'"
-            else:
-                self.error("Please pick Finger rotation Axis")
-                return                          
-        else:
-            handpreset= None
+        #if self.finger_checkBox.isChecked() :
+            #if self.finger_x.isChecked():
+                #handpreset="'x'"
+            #elif self.finger_y.isChecked():
+                #handpreset="'y'"
+            #elif self.finger_z.isChecked():
+                #handpreset="'z'"
+            #else:
+                #self.error("Please pick Finger rotation Axis")
+                #return                          
+        #else:
+            #handpreset= None
 ########################
 
-
-
+        
+        if self.rig_fingers_checkbox.isChecked:
+            fingerRig=True
+        else:
+            fingerRig=False
 
 
 
@@ -1573,7 +1567,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         try:
 
             fob=open("platform\\scripts\\sfm\\animset\\" + name,"w")
-            fob.write(script+"\nboneList= %s \nfingerbones= %s \nBuildRig(%s,%s,%s,boneList,%s,fingerbones,%s);" %(boneList,fingerbones,spine,toe,collar,footroll,handpreset))
+            fob.write(script+"\nboneList= %s \nBuildRig(%s,%s,%s,boneList,%s,%s,%s);" %(boneList,spine,toe,collar,footroll,fingerRig,None))
             fob.close()
 
      
@@ -1995,14 +1989,14 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.line.setFrameShadow(QtGui.QFrame.Sunken)
         self.line.setObjectName("line")
         self.horizontalLayout_2.addWidget(self.line)
-        self.rig_fingers_Button = QtGui.QCheckBox(self.groupBox_4)
+        self.rig_fingers_checkbox = QtGui.QCheckBox(self.groupBox_4)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.rig_fingers_Button.sizePolicy().hasHeightForWidth())
-        self.rig_fingers_Button.setSizePolicy(sizePolicy)
-        self.rig_fingers_Button.setObjectName("rig_fingers_Button")
-        self.horizontalLayout_2.addWidget(self.rig_fingers_Button)
+        sizePolicy.setHeightForWidth(self.rig_fingers_checkbox.sizePolicy().hasHeightForWidth())
+        self.rig_fingers_checkbox.setSizePolicy(sizePolicy)
+        self.rig_fingers_checkbox.setObjectName("rig_fingers_Button")
+        self.horizontalLayout_2.addWidget(self.rig_fingers_checkbox)
         self.finger_checkBox = QtGui.QCheckBox(self.groupBox_4)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -2159,7 +2153,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.sp4.clicked.connect(lambda: self.hide())
         self.toeoption.clicked.connect(lambda: self.hide())
         self.shoulderoption.clicked.connect(lambda: self.hide())
-        #self.rig_fingers_Button.clicked.connect(lambda: self.rigfingers())
+        #self.rig_fingers_checkbox.clicked.connect(lambda: self.rigfingers())
         #calls auto find method
         self.find(bonelist)
 
@@ -2215,12 +2209,12 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.foot_y.setText(QtGui.QApplication.translate("window", "y", None, QtGui.QApplication.UnicodeUTF8))
         self.foot_z.setToolTip(QtGui.QApplication.translate("window", "blue", None, QtGui.QApplication.UnicodeUTF8))
         self.foot_z.setText(QtGui.QApplication.translate("window", "z", None, QtGui.QApplication.UnicodeUTF8))
-        self.rig_fingers_Button.setToolTip(QtGui.QApplication.translate("window", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+        self.rig_fingers_checkbox.setToolTip(QtGui.QApplication.translate("window", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600; text-align:center;\">makes fingers not lag</span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.rig_fingers_Button.setText(QtGui.QApplication.translate("window", "rig fingers", None, QtGui.QApplication.UnicodeUTF8))
+        self.rig_fingers_checkbox.setText(QtGui.QApplication.translate("window", "rig fingers", None, QtGui.QApplication.UnicodeUTF8))
         self.finger_checkBox.setToolTip(QtGui.QApplication.translate("window", "adds fist and open palm presets to fingers", None, QtGui.QApplication.UnicodeUTF8))
         self.finger_checkBox.setText(QtGui.QApplication.translate("window", "add finger presets", None, QtGui.QApplication.UnicodeUTF8))
         self.label_25.setText(QtGui.QApplication.translate("window", "finger Axis:", None, QtGui.QApplication.UnicodeUTF8))
