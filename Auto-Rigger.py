@@ -399,17 +399,7 @@ class Ui_window(QtGui.QMainWindow):
         collarR_list=['collarr','r_clavicle','clavicle_r','clavicle r','r clavicle','r_collar','collar_r','collar r','r collar','r_shoulder','shoulder_r','shoulder r','r shoulder']
         collarL_list=['collarl','l_clavicle','clavicle_l','clavicle l','l clavicle','l_collar','collar_l','collar l','l collar','l_shoulder','shoulder_l','shoulder l','l shoulder']
         
-        upperlegR_list=['upperlegR','thigh_r','r_thigh','r thigh','thigh r','upperleg_r','r_upperleg','upperleg r','hip_r']
-        upperlegL_list=['upperlegl','thigh_l','l_thigh','l thigh','thigh l', 'upperleg_l','l_upperleg','upperleg l','hip_l']
-        
-        lowerlegR_list=['lowerlegr','knee_r','r_knee','knee r','r knee','lowerleg_r','r_lowerleg','lowerleg r','r lowerleg','calf_r','r_calf','r calf','calf r']
-        lowerlegL_list=['lowerlegl','knee_l','l_knee','knee l','l knee','lowerleg_l','l_lowerleg','lowerleg l','l lowerleg','calf_l','l_calf','l calf','calf l']
-        
-        upperarmL_list=['upperarml','upperarm_l','l_upperarm','l upperarm','upperarm l','bicep_l','l_bicep','bicep l' ]
-        upperarmR_list=['upperarmr','upperarm_r','r_upperarm','r upperarm','upperarm r','bicep_r','r_bicep','bicep r' ]
 
-        lowerarmL_list=['lowerarml','lowerarm_l','l_lowerarm','l lowerarm','lowerarm l','forearm_l','l_forearm','forearm l','l forearm','elbow_l','l_elbow','elbow l' ]
-        lowerarmR_list=['lowerarmr','lowerarm_r','r_lowerarm','r lowerarm','lowerarm r', 'forearm_r','r_forearm','forearm r','r forearm','elbow_r','r_elbow','elbow r']
 
         for name in handr_list:
             for i in lst:
@@ -441,86 +431,7 @@ class Ui_window(QtGui.QMainWindow):
                     self.bone_collarL.setCurrentIndex(index)
                     break
 
-        for name in upperlegR_list:
-            for i in lst:
-                if name in i.lower():
-                    index=self.bone_head.findText(i)
-                    self.bone_upperlegR.setCurrentIndex(index)
-
-
-        for name in upperlegL_list:
-            for i in lst:
-                if name in i.lower():
-                    index=self.bone_head.findText(i)
-                    self.bone_upperlegL.setCurrentIndex(index)
-
-
-        for name in lowerlegR_list:
-            for i in lst:
-                if name in i.lower():
-                    index=self.bone_head.findText(i)
-                    self.bone_lowerlegR.setCurrentIndex(index)
-
-
-
-        for name in lowerlegL_list:
-            for i in lst:
-                if name in i.lower():
-                    index=self.bone_head.findText(i)
-                    self.bone_lowerlegL.setCurrentIndex(index)
-
-
-
-
-
-
-
-
-
-                    
-
-
-
-        for name in upperarmL_list:
-            for i in lst:
-                if name in i.lower():
-                    index=self.bone_head.findText(i)
-                    self.bone_upperarmL.setCurrentIndex(index)
-
-        for name in upperarmR_list:
-            for i in lst:
-                if name in i.lower():
-                    index=self.bone_head.findText(i)
-                    self.upperarmR.setCurrentIndex(index)
-
-
-
-        for name in lowerarmL_list:
-            for i in lst:
-                if name in i.lower():
-                    index=self.bone_head.findText(i)
-                    self.bone_lowerarmL.setCurrentIndex(index)
-
-
-
-        for name in lowerarmR_list:
-            for i in lst:
-                if name in i.lower():
-                    index=self.bone_head.findText(i)
-                    self.bone_lowerarmR.setCurrentIndex(index)
-
-
-
-
-
-
-
-
-                    
-
-
-
-
+    
 
         
 ############ a differnet way to find common bone name
@@ -601,8 +512,33 @@ class Ui_window(QtGui.QMainWindow):
 
 
 
-            
-
+	    # auto picks the parent and grandparent for ik 
+    def autofind(self,child,parent,grandparent):
+        #print num
+	#print child.currentText()
+	boneRoot = self.bonename_to_obj[child.currentText()]
+	
+	#print str(boneRoot.GetParent().GetParent())
+	#help(boneRoot)
+	if "bone" not in str(boneRoot.GetParent().GetParent()):
+		
+		return	
+	
+	
+	b=str(boneRoot.GetParent().GetName()).find('(')
+	e=str(boneRoot.GetParent().GetName()).find(')')
+	boneparent=str(boneRoot.GetParent().GetName())[b+1:e]	
+	
+	
+	b=str(boneRoot.GetParent().GetParent().GetName()).find('(')
+	e=str(boneRoot.GetParent().GetParent().GetName()).find(')')
+	bonegrandparent=str(boneRoot.GetParent().GetParent().GetName())[b+1:e]	
+	
+	
+	parent.setCurrentIndex(parent.findText(boneparent))
+	
+	grandparent.setCurrentIndex(parent.findText(bonegrandparent))
+	
     def Message(self,text):
         #message box
 
@@ -1763,6 +1699,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.bone_toeR.setMaxVisibleItems(30)
         self.gridLayout_2.addWidget(self.bone_toeR, 3, 1, 1, 1)
         self.bone_lowerlegR = QtGui.QComboBox(self.groupBox_3)
+	
         self.bone_lowerlegR.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
         self.bone_lowerlegR.setObjectName("bone_lowerlegR")
         self.bone_lowerlegR.setMaxVisibleItems(30)
@@ -2080,6 +2017,8 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
 
 
         ##finds bones adds to lists
+	self.bonename_to_obj={}
+	
         count=0
         global bonelist
         tmpDag="null"
@@ -2093,6 +2032,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
             bonename=str(tmpDag)[b+1:e]
             if "dme" in bonename.lower() :
                 continue
+	    self.bonename_to_obj[bonename]=tmpDag
             bonelist.append(bonename)
             
 
@@ -2134,7 +2074,28 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         QtCore.QObject.connect(self.finger_checkBox, QtCore.SIGNAL("toggled(bool)"), self.frame_2.setEnabled)
         QtCore.QObject.connect(self.footroll_checkbox, QtCore.SIGNAL("toggled(bool)"), self.label_4.setEnabled)
         QtCore.QObject.connect(self.finger_checkBox, QtCore.SIGNAL("toggled(bool)"), self.label_25.setEnabled)
-
+	
+	
+	#for autofind
+	self.bone_lowerlegR.setEnabled(False)
+	self.bone_upperlegL.setEnabled(False)
+	self.bone_lowerarmL.setEnabled(False)
+	self.bone_upperarmL.setEnabled(False)
+	self.bone_lowerarmR.setEnabled(False)
+	self.upperarmR.setEnabled(False)
+	self.bone_lowerlegL.setEnabled(False)
+	self.bone_upperlegR.setEnabled(False)
+	
+	
+	self.bone_handL.currentIndexChanged.connect(lambda: self.autofind(self.bone_handL,self.bone_lowerarmL,self.bone_upperarmL))
+	self.handR.currentIndexChanged.connect(lambda: self.autofind(self.handR,self.bone_lowerarmR,self.upperarmR))	
+	self.bone_footL.currentIndexChanged.connect(lambda: self.autofind(self.bone_footL,self.bone_lowerlegL,self.bone_upperlegL))	
+	self.bone_footR.currentIndexChanged.connect(lambda: self.autofind(self.bone_footR,self.bone_lowerlegR,self.bone_upperlegR))
+	
+	
+	
+	
+	
         
         self.retranslateUi(window)
 
