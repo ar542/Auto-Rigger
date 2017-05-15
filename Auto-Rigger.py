@@ -669,14 +669,14 @@ class Ui_window(QtGui.QMainWindow):
 
 
         script="""
-
 #created with Auto-Rigger v1.9 for biped models
 #BY http://steamcommunity.com/id/OMGTheresABearInMyOatmeal/
 #This is just a modified version of valves' biped simple script.
 
 import vs
 import random
-sfm.EndRig()
+from collections import OrderedDict
+
 #==================================================================================================
 def AddValidObjectToList( objectList, obj ):
     if ( obj != None ): objectList.append( obj )
@@ -688,9 +688,6 @@ def HideControlGroups( rig, rootGroup, *groupNames ):
         group = rootGroup.FindChildByName( name, False )
         if ( group != None ):
             rig.HideControlGroup( group )
-
-
-
 
 
 def CreateOrientConstraint( target, slave, bCreateControls=True, group=None ) :
@@ -717,6 +714,42 @@ def CreateOrientConstraint( target, slave, bCreateControls=True, group=None ) :
             
     sfm.PopSelection()
     return
+
+#==================================================================================================
+# this is a recursive function for riging all child dags of a parent dag
+#==================================================================================================
+rig_fingers=OrderedDict()
+dag_fingers=[]
+def rigfingers(dag,rig_root):
+
+    if dag.GetChildCount()>0:
+        for index in range(dag.GetChildCount()):
+           
+           # print "parent " +str(dag.GetChild(index).GetName())+ " to "+ parentname
+            
+            dag_fingers.append(dag.GetChild(index))
+            temp=dag_fingers[-1].GetName()
+            FingerName=temp[temp.find("(")+1:temp.find(")")]
+            fig=sfmUtils.CreateConstrainedHandle( "RIG_"+FingerName,  dag_fingers[-1]   ,    bCreateControls=False )
+            
+            rig_fingers[fig]=rig_root
+                  
+           # CreateOrientConstraint( fig,dag_fingers[-1])
+            
+            rigfingers(dag_fingers[-1],fig)
+    return 
+
+
+def parent_rig_fingers(rig_root,fingerdict):
+
+
+    for child in fingerdict:
+        sfmUtils.ParentMaintainWorld( child,fingerdict[child] )
+            
+
+
+
+    
 
 
 
@@ -868,7 +901,7 @@ def ComputeVectorBetweenBones( boneA, boneB, scaleFactor ):
 #==================================================================================================
 # Build a simple ik rig for the currently selected animation set
 #==================================================================================================
-def BuildRig(num,toe,collar,bone,footroll,fingerbones,handpreset):
+def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
 
     # Get the currently selected animation set and shot
     shot = sfm.GetCurrentShot()
@@ -986,21 +1019,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingerbones,handpreset):
     boneHandL     = sfmUtils.FindFirstDag( [ bone[22]  ], True )
 
 
-    #for fingers
-    rig_finger_right=[]
-    bone_finger_right=[]
-    
-    rig_finger_left=[]
-    bone_finger_left=[]
-    if (fingerbones):
 
-        for i in fingerbones["right"]:
-            bone_finger_right.append(sfmUtils.FindFirstDag( [ i ], True ))
-            rig_finger_right.append(sfmUtils.CreateConstrainedHandle( "rig_"+i,     bone_finger_right[-1],    bCreateControls=False ))
-
-        for i in fingerbones["left"]:
-            bone_finger_left.append(sfmUtils.FindFirstDag( [ i ], True ))
-            rig_finger_left.append(sfmUtils.CreateConstrainedHandle( "rig_"+i,     bone_finger_left[-1],    bCreateControls=False ))
 
 
 
@@ -1057,8 +1076,27 @@ def BuildRig(num,toe,collar,bone,footroll,fingerbones,handpreset):
     for i in allRigHandles1:
         if i !="null":
             allRigHandles.append(i)
+
+
+
+    #for fingers
+
     
-    allRigHandles.extend(rig_finger_right+rig_finger_left)
+    if (fingeropton):
+        global rig_fingers,dag_fingers
+        rigfingers(boneHandR,rigHandR)
+        rig_finger_right=rig_fingers
+        bone_finger_right=dag_fingers
+        
+        rig_fingers=OrderedDict()
+        dag_fingers=[]       
+        
+        rigfingers(rigHandL,rigHandL)
+        rig_finger_left=rig_fingers
+        bone_finger_left=dag_fingers
+
+        
+    allRigHandles.extend(rig_finger_left.keys()+rig_finger_right.keys())
     #==============================================================================================
     # Generate the world space logs for the rig handles and remove the constraints
     #==============================================================================================
@@ -1066,7 +1104,10 @@ def BuildRig(num,toe,collar,bone,footroll,fingerbones,handpreset):
     sfmUtils.SelectDagList( allRigHandles )
     sfm.GenerateSamples()
     sfm.RemoveConstraints()
+    
 
+
+        
 
     #==============================================================================================
     # Build the rig handle hierarchy
@@ -1156,22 +1197,10 @@ def BuildRig(num,toe,collar,bone,footroll,fingerbones,handpreset):
 
 
 
-##############finger
-
-
-    if (fingerbones):
-        for i in range(len(rig_finger_right)):
-            if(i%3==0):#base
-                sfmUtils.ParentMaintainWorld( rig_finger_right[i],rigHandR )
-            else:
-                sfmUtils.ParentMaintainWorld( rig_finger_right[i],rig_finger_right[i-1] )
-
-
-        for i in range(len(rig_finger_left)):
-            if(i%3==0):#base
-                sfmUtils.ParentMaintainWorld( rig_finger_left[i],rigHandL )
-            else:
-                sfmUtils.ParentMaintainWorld( rig_finger_left[i],rig_finger_left[i-1] )
+######for fingers
+    if (fingeropton):
+        parent_rig_fingers(rigHandR,rig_finger_right)
+        parent_rig_fingers(rigHandL,rig_finger_right)
 
 
 
@@ -1229,6 +1258,9 @@ def BuildRig(num,toe,collar,bone,footroll,fingerbones,handpreset):
     # Create constraints to drive the bone transforms using the rig handles
     #==============================================================================================
 
+
+
+            
     # The following bones are simply constrained directly to a rig handle
     sfmUtils.CreatePointOrientConstraint( rigRoot,      boneRoot        )
     sfmUtils.CreatePointOrientConstraint( rigHips,      bonePelvis      )
@@ -1257,13 +1289,16 @@ def BuildRig(num,toe,collar,bone,footroll,fingerbones,handpreset):
 
 
 ##fingers
-    if (fingerbones):
-        for i in range(len(rig_finger_right)):
-            CreateOrientConstraint( rig_finger_right[i],bone_finger_right[i] )
+    if (fingeropton):
+        index=0
+        for Rig in rig_finger_right:
+            CreateOrientConstraint( Rig,bone_finger_right[index])
+            index+=1
 
-
-        for i in range(len(rig_finger_left)):
-            CreateOrientConstraint( rig_finger_left[i],bone_finger_left[i] )
+        index=0
+        for Rig in rig_finger_left:
+            CreateOrientConstraint( Rig,bone_finger_left[index])
+            index+=1
 
 
 
@@ -1362,6 +1397,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingerbones,handpreset):
 
     # Set the control group visiblity, this is done through the rig so it can track which
     # groups it hid, so they can be set back to being visible when the rig is detached.
+    
     HideControlGroups( rig, rootGroup, "Body", "Arms", "Legs","Root" )
 
     #Re-order the groups
@@ -1398,7 +1434,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingerbones,handpreset):
 
 
 
-    if (fingerbones):
+    if (fingeropton):
         HideControlGroups(rig, rootGroup,"Fingers")
         rightFingersGroup=rootGroup.CreateControlGroup( "Right_Fingers" )
         RightArmGroup.AddChild( rightFingersGroup )
@@ -1437,6 +1473,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingerbones,handpreset):
 #==================================================================================================
 # Script entry
 #==================================================================================================
+
 
 """
 
