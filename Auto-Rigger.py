@@ -125,45 +125,21 @@ class Ui_window(QtGui.QMainWindow):
 
                             index=self.handR.findText(bonelist[14])
                             self.handR.setCurrentIndex(index)
+			    
                             index=self.handR.findText(bonelist[22])
                             self.bone_handL.setCurrentIndex(index)
 
-
-                                
-                            index=self.handR.findText(bonelist[7])
-                            self.bone_upperlegR.setCurrentIndex(index)
-
-
-
-                            index=self.handR.findText(bonelist[15])
-                            self.bone_upperlegL.setCurrentIndex(index)
-                            index=self.handR.findText(bonelist[8])
-                            self.bone_lowerlegR.setCurrentIndex(index)
-
-                            index=self.handR.findText(bonelist[16])
-                            self.bone_lowerlegL.setCurrentIndex(index)
-
-                            index=self.handR.findText(bonelist[20])
-                            self.bone_upperarmL.setCurrentIndex(index)
-
-                            index=self.handR.findText(bonelist[12])
-                            self.upperarmR.setCurrentIndex(index)
-
-                            index=self.handR.findText(bonelist[21])
-                            self.bone_lowerarmL.setCurrentIndex(index)
-                            index=self.handR.findText(bonelist[13])
-                            self.bone_lowerarmR.setCurrentIndex(index)
-
                             index=self.handR.findText(bonelist[1])
-                            self.bone_spine0.setCurrentIndex(index)
-                            
+                            self.bone_spine0.setCurrentIndex(index)                           
 
 
 
                             index=self.handR.findText(bonelist[6])    
                             self.bone_head.setCurrentIndex(index)
+			    
                             index=self.handR.findText(bonelist[5]) 
                             self.bone_neck.setCurrentIndex(index)
+			    
                             index=self.handR.findText(bonelist[0])
                             self.bone_pelvis.setCurrentIndex(index)
 
@@ -173,31 +149,36 @@ class Ui_window(QtGui.QMainWindow):
                             index=self.handR.findText(bonelist[17])
                             self.bone_footL.setCurrentIndex(index)
                             
-                        if "fingerbones" in i and '{' in i:
-                            b=(i.find("{"))
-                            fingerbones=ast.literal_eval(i[b:])###get the fingerbones list
-                            self.rig_finger_win.openfile(fingerbones)
+
                         
                         if "BuildRig" in i:
+			    b=i.find('(')
+			    
+			    e=i.find(')')
+			    
+                            inputlist=i[b+1:e].split(',')
+			    
+                            num=(int(inputlist[0])) #spine number
                             
-                            num=(int(i[9])) #spine number
-                            
-                            axis= i[31]
-                            if axis == 'z':
+                            axis=inputlist[4]
+			    if '-'in axis:
+				self.footroll_negative_checkbox.setChecked(True)			    
+                            if  'z' in axis:
                                 
                                 self.footroll_checkbox.setChecked(True)
                                 self.foot_z.setChecked(True)
-                            elif axis == 'x':
+                            elif 'x' in axis:
                                 self.footroll_checkbox.setChecked(True)
                                 self.foot_x.setChecked(True)
-                            elif axis == 'y':
+                            elif 'y' in axis:
                                 self.footroll_checkbox.setChecked(True)
-                                self.foot_y.setChecked(True)
+                                self.foot_y.setChecked(True)			
+				
                             else:
                                 self.footroll_checkbox.setChecked(False)
 
                             
-                            if i[11]=='T':#toe option
+                            if inputlist[1]=='True':#toe option
                                 index=self.handR.findText(bonelist[18])
                                 self.bone_toeL.setCurrentIndex(index)
                                 index=self.handR.findText(bonelist[10])
@@ -211,7 +192,7 @@ class Ui_window(QtGui.QMainWindow):
                               ########################
 
                                 
-                            if i[16]=="T":##collar option
+                            if inputlist[2]=='True':##collar option
                                 index=self.handR.findText(bonelist[11])
                                 self.bone_collarR.setCurrentIndex(index)
                                 index=self.handR.findText(bonelist[19])
@@ -221,7 +202,14 @@ class Ui_window(QtGui.QMainWindow):
                                 self.shoulderoption.setChecked(False)
                                 
                             
-
+			    if inputlist[5]=='True':#for rigfingers
+				
+				self.rig_fingers_checkbox.setChecked(True)
+			    else:
+				self.rig_fingers_checkbox.setChecked(False)
+				
+				
+				
                               ##spine
                             
                             if num == 1:
@@ -384,7 +372,7 @@ class Ui_window(QtGui.QMainWindow):
                                                       
                             
         self.hide()
-                            
+     
 
 
 
@@ -710,6 +698,12 @@ def CreateReverseFoot( controlName, sideName, gameModel, animSet, shot, helperCo
         rotationAxis = vs.Vector( 0, 1, 0 )
     elif (footroll=="z"):
         rotationAxis = vs.Vector( 0, 0, 1 )
+    elif (footroll=="-x"):
+        rotationAxis = vs.Vector( -1, 0, 0 )
+    elif (footroll=="-y"):
+        rotationAxis = vs.Vector( 0, -1, 0 )
+    elif (footroll=="-z"):
+        rotationAxis = vs.Vector( 0, 0, -1 )	
     else: return None
     # Construct the name of the dag nodes of the foot and toe for the specified side
     footName = "rig_foot_" + sideName
@@ -1342,7 +1336,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
     rootGroup.MoveChildToBottom( rigBodyGroup )
     rootGroup.MoveChildToBottom( rigLegsGroup )
     rootGroup.MoveChildToBottom( rigArmsGroup )
-
+    rootGroup.MoveChildToBottom( rootGroup.FindChildByName("Unknown",True) )
 
 
 
@@ -1456,6 +1450,13 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
                 footroll="'y'"
             elif self.foot_z.isChecked():                
                 footroll="'z'"
+		
+	    elif self.foot_x.isChecked() and self.footroll_negative_checkbox.isChecked():
+		    footroll="'-x'"	    
+            elif self.foot_y.isChecked()and self.footroll_negative_checkbox.isChecked():
+                footroll="'-y'"
+            elif self.foot_z.isChecked()and self.footroll_negative_checkbox.isChecked():                
+                footroll="'-z'"		
             else:
                 self.error("please pick footRoll rotation Axis")
                 return
@@ -1540,9 +1541,9 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
 
         window.setObjectName("window")
         window.resize(929, 455)
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("platform/tools/images/sfm/sfm_app.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        window.setWindowIcon(icon)
+        #icon = QtGui.QIcon()
+        #icon.addPixmap(QtGui.QPixmap("platform/tools/images/sfm/sfm_app.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
+        #window.setWindowIcon(icon)
         self.gridLayout_4 = QtGui.QGridLayout(window)
         self.gridLayout_4.setContentsMargins(-1, -1, -1, 15)
         self.gridLayout_4.setObjectName("gridLayout_4")
@@ -1783,11 +1784,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         font2.setPointSize(20)
         self.createfile.setFont(font2)
 	
-	font2.setPointSize(10)
-	self.groupBox_2.setFont(font2)
-	self.groupBox_3.setFont(font2)
-	self.groupBox.setFont(font2)
-	
+
 	
         self.createfile.setAutoFillBackground(False)
         self.createfile.setCheckable(False)
@@ -1874,6 +1871,16 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         sizePolicy.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
         self.label_4.setSizePolicy(sizePolicy)
         self.label_4.setObjectName("label_4")
+	
+	
+	self.footroll_negative_checkbox = QtGui.QCheckBox(self.groupBox_4)
+	self.footroll_negative_checkbox.setEnabled(False)
+	
+	
+	
+	
+	
+	self.horizontalLayout_2.addWidget(self.footroll_negative_checkbox)
         self.horizontalLayout_2.addWidget(self.label_4)
         self.frame = QtGui.QFrame(self.groupBox_4)
         self.frame.setEnabled(False)
@@ -2021,7 +2028,12 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.openfile.setChecked(False)
         self.openfile.setObjectName("createfile")
         self.gridLayout_4.addWidget(self.openfile, 6, 0, 1, 2)
-
+	
+	font2.setPointSize(10)
+	self.groupBox_2.setFont(font2)
+	self.groupBox_3.setFont(font2)
+	self.groupBox.setFont(font2)
+	self.groupBox_4.setFont(font2)
 
         ##finds bones adds to lists
 	self.bonename_to_obj={}
@@ -2081,6 +2093,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         QtCore.QObject.connect(self.finger_checkBox, QtCore.SIGNAL("toggled(bool)"), self.frame_2.setEnabled)
         QtCore.QObject.connect(self.footroll_checkbox, QtCore.SIGNAL("toggled(bool)"), self.label_4.setEnabled)
         QtCore.QObject.connect(self.finger_checkBox, QtCore.SIGNAL("toggled(bool)"), self.label_25.setEnabled)
+	QtCore.QObject.connect(self.footroll_checkbox, QtCore.SIGNAL("toggled(bool)"), self.footroll_negative_checkbox.setEnabled)
 	
 	
 	#for autofind
@@ -2170,13 +2183,16 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.openfile.setText(QtGui.QApplication.translate("window", "Load Rig Script", None, QtGui.QApplication.UnicodeUTF8))
         self.footroll_checkbox.setToolTip(QtGui.QApplication.translate("window", "<html><head/><body><p>creates a channel to make posing foot for walking easier.</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.footroll_checkbox.setText(QtGui.QApplication.translate("window", "add footroll", None, QtGui.QApplication.UnicodeUTF8))
+	
+	
+	self.footroll_negative_checkbox.setText(QtGui.QApplication.translate("window", "Negative value", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("window", "foot Axis:", None, QtGui.QApplication.UnicodeUTF8))
         self.foot_x.setToolTip(QtGui.QApplication.translate("window", "red", None, QtGui.QApplication.UnicodeUTF8))
-        self.foot_x.setText(QtGui.QApplication.translate("window", "x", None, QtGui.QApplication.UnicodeUTF8))
+        self.foot_x.setText(QtGui.QApplication.translate("window", "X", None, QtGui.QApplication.UnicodeUTF8))
         self.foot_y.setToolTip(QtGui.QApplication.translate("window", "green", None, QtGui.QApplication.UnicodeUTF8))
-        self.foot_y.setText(QtGui.QApplication.translate("window", "y", None, QtGui.QApplication.UnicodeUTF8))
+        self.foot_y.setText(QtGui.QApplication.translate("window", "Y", None, QtGui.QApplication.UnicodeUTF8))
         self.foot_z.setToolTip(QtGui.QApplication.translate("window", "blue", None, QtGui.QApplication.UnicodeUTF8))
-        self.foot_z.setText(QtGui.QApplication.translate("window", "z", None, QtGui.QApplication.UnicodeUTF8))
+        self.foot_z.setText(QtGui.QApplication.translate("window", "Z", None, QtGui.QApplication.UnicodeUTF8))
         self.rig_fingers_checkbox.setToolTip(QtGui.QApplication.translate("window", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
@@ -2184,14 +2200,14 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600; text-align:center;\">makes fingers not lag</span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.rig_fingers_checkbox.setText(QtGui.QApplication.translate("window", "rig fingers", None, QtGui.QApplication.UnicodeUTF8))
         self.finger_checkBox.setToolTip(QtGui.QApplication.translate("window", "adds fist and open palm presets to fingers", None, QtGui.QApplication.UnicodeUTF8))
-        self.finger_checkBox.setText(QtGui.QApplication.translate("window", "add finger presets", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_25.setText(QtGui.QApplication.translate("window", "finger Axis:", None, QtGui.QApplication.UnicodeUTF8))
+        self.finger_checkBox.setText(QtGui.QApplication.translate("window", "Add finger presets", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_25.setText(QtGui.QApplication.translate("window", "Finger Axis:", None, QtGui.QApplication.UnicodeUTF8))
         self.finger_x.setToolTip(QtGui.QApplication.translate("window", "red", None, QtGui.QApplication.UnicodeUTF8))
-        self.finger_x.setText(QtGui.QApplication.translate("window", "x", None, QtGui.QApplication.UnicodeUTF8))
+        self.finger_x.setText(QtGui.QApplication.translate("window", "X", None, QtGui.QApplication.UnicodeUTF8))
         self.finger_y.setToolTip(QtGui.QApplication.translate("window", "green", None, QtGui.QApplication.UnicodeUTF8))
-        self.finger_y.setText(QtGui.QApplication.translate("window", "y", None, QtGui.QApplication.UnicodeUTF8))
+        self.finger_y.setText(QtGui.QApplication.translate("window", "Y", None, QtGui.QApplication.UnicodeUTF8))
         self.finger_z.setToolTip(QtGui.QApplication.translate("window", "blue", None, QtGui.QApplication.UnicodeUTF8))
-        self.finger_z.setText(QtGui.QApplication.translate("window", "z", None, QtGui.QApplication.UnicodeUTF8))
+        self.finger_z.setText(QtGui.QApplication.translate("window", "Z", None, QtGui.QApplication.UnicodeUTF8))
         self.sp1.setText(QtGui.QApplication.translate("window", "1 spine bone", None, QtGui.QApplication.UnicodeUTF8))
 
 #==================================================================================================
