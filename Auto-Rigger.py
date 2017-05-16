@@ -1782,6 +1782,13 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         font2 = QtGui.QFont()
         font2.setPointSize(20)
         self.createfile.setFont(font2)
+	
+	font2.setPointSize(10)
+	self.groupBox_2.setFont(font2)
+	self.groupBox_3.setFont(font2)
+	self.groupBox.setFont(font2)
+	
+	
         self.createfile.setAutoFillBackground(False)
         self.createfile.setCheckable(False)
         self.createfile.setChecked(False)
@@ -2091,7 +2098,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
 	self.handR.currentIndexChanged.connect(lambda: self.autofind(self.handR,self.bone_lowerarmR,self.upperarmR))	
 	self.bone_footL.currentIndexChanged.connect(lambda: self.autofind(self.bone_footL,self.bone_lowerlegL,self.bone_upperlegL))	
 	self.bone_footR.currentIndexChanged.connect(lambda: self.autofind(self.bone_footR,self.bone_lowerlegR,self.bone_upperlegR))
-	
+	##
 	
 	
 	
