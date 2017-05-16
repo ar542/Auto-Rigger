@@ -2097,6 +2097,16 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
 	
 	
 	#for autofind
+	self.label_16.setEnabled(False)
+	self.label_22.setEnabled(False)
+	self.label_23.setEnabled(False)
+	self.label_21.setEnabled(False)
+	self.label_24.setEnabled(False)
+	self.label_9.setEnabled(False)
+	self.label_14.setEnabled(False)
+	self.label_10.setEnabled(False)	
+	
+	
 	self.bone_lowerlegR.setEnabled(False)
 	self.bone_upperlegL.setEnabled(False)
 	self.bone_lowerarmL.setEnabled(False)
