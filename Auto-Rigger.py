@@ -1,24 +1,21 @@
 # -*- coding: utf-8 -*-
 #
-#Auto-Rigger v1.9 for biped models
+#Auto-Rigger v1.9.3 for biped models
 
-#Created: june 5  2015
+#Created: june 5 2015
 #BY http://steamcommunity.com/id/OMGTheresABearInMyOatmeal/
 #feel free to modify the script for your own use
 #find any bugs or suggestions message me in the workshop page comments
-
 from PySide import QtCore, QtGui
 import vs, os,ast, sys
 #get model name and store file name
 animSet = sfm.GetCurrentAnimationSet()
 gameModel = animSet.gameModel
 
-name="rig_"+(animSet.GetName())[:-1]+".py"
+name = "rig_" + (animSet.GetName())[:-1] + ".py"
 #str(gameModel)[b+1:e]
 #print(gameModel.GetName())
-bonelist=[]
-fingerbones={}
-
+bonelist = []
 
 class Ui_window(QtGui.QMainWindow):
 
@@ -27,142 +24,168 @@ class Ui_window(QtGui.QMainWindow):
 
     
     def hide(self):
-        if  self.sp1.isChecked():
-            self.label_6.setEnabled(False)
-            self.label_7.setEnabled(False)
-            self.label_8.setEnabled(False)
-            self.bone_spine2.setEnabled(False)
-            self.bone_spine3.setEnabled(False)
-            self.bone_spine1.setEnabled(False)
+
+
+        #spine
+        self.label_spine1.setEnabled(self.sp4.isChecked() or self.sp2.isChecked() or self.sp3.isChecked())
+        self.bone_spine1.setEnabled(self.sp4.isChecked() or self.sp2.isChecked() or self.sp3.isChecked())
+            
+        self.label_sprine2.setEnabled(self.sp4.isChecked() or self.sp3.isChecked())
+        self.bone_spine2.setEnabled(self.sp4.isChecked() or self.sp3.isChecked())
+            
+        self.bone_spine3.setEnabled(self.sp4.isChecked())
+        self.label_spine3.setEnabled(self.sp4.isChecked())
+         
+     
+            #toe
         
-        if  self.sp2.isChecked():
-            self.label_6.setEnabled(True)
-            self.bone_spine1.setEnabled(True)
-            self.label_7.setEnabled(False)
-            self.label_8.setEnabled(False)
-            self.bone_spine2.setEnabled(False)
-            self.bone_spine3.setEnabled(False)
+        self.bone_toeL.setEnabled(self.toeoption.isChecked())
+        self.bone_toeR.setEnabled(self.toeoption.isChecked())
+        self.label_12.setEnabled(self.toeoption.isChecked())
+        self.label_17.setEnabled(self.toeoption.isChecked())
+        self.bone_toeL.setEnabled(self.toeoption.isChecked())
+        self.bone_toeR.setEnabled(self.toeoption.isChecked())
+        self.label_12.setEnabled(self.toeoption.isChecked())
+        self.label_17.setEnabled(self.toeoption.isChecked())
 
-        if  self.sp3.isChecked():
-            self.label_7.setEnabled(True)
-            self.bone_spine2.setEnabled(True)
-            self.bone_spine3.setEnabled(False)
-            self.label_8.setEnabled(False)
+       
+        
+        #footRoll
+        self.footroll_checkbox.setChecked(False if(self.toeoption.isChecked() == False)else self.footroll_checkbox.isChecked())
+        self.footroll_checkbox.setEnabled(self.toeoption.isChecked())   
+        
+        #collar
+        self.bone_collarR.setEnabled(self.shoulderoption.isChecked())
+        self.bone_collarL.setEnabled(self.shoulderoption.isChecked())
+        self.label_19.setEnabled(self.shoulderoption.isChecked())
+        self.label_15.setEnabled(self.shoulderoption.isChecked())
 
-        if  self.sp4.isChecked():
-            self.label_7.setEnabled(True)
-            self.bone_spine2.setEnabled(True)
-            self.bone_spine3.setEnabled(True)
-            self.label_8.setEnabled(True)
-
-        if self.toeoption.isChecked():
-
-            self.footroll_checkbox.setEnabled(True)
-            self.bone_toeL.setEnabled(True)
-            self.bone_toeR.setEnabled(True)
-            self.label_12.setEnabled(True)
-            self.label_17.setEnabled(True)
-        else:
-            self.footroll_checkbox.setEnabled(False)
-            self.footroll_checkbox.setChecked(False)
-            
-        if self.shoulderoption.isChecked():
-            self.bone_collarR.setEnabled(True)
-            self.bone_collarL.setEnabled(True)
-            self.label_19.setEnabled(True)
-            self.label_15.setEnabled(True)
-
-        if self.shoulderoption.isChecked()==False:
-            self.bone_collarR.setEnabled(False)
-            self.bone_collarL.setEnabled(False)
-            self.label_19.setEnabled(False)
-            self.label_15.setEnabled(False)
 
             
-        if self.toeoption.isChecked()==False:
-            self.bone_toeL.setEnabled(False)
-            self.bone_toeR.setEnabled(False)
-            self.label_12.setEnabled(False)
-            self.label_17.setEnabled(False)
+        
 
+            
+
+
+
+    
     def opensave(self):      ##opens rig file to reselect bones
         
-        filename=None
+        filename = None
         try:
             
             filename, foo = QtGui.QFileDialog.getOpenFileName(None,
                         "Load Rig File", "platform\\scripts\\sfm\\animset\\", "(*.py)")
             if  filename:
-                
-                toe=None
-                collar=None
+                ver_num = None
+                toe = None
+                collar = None
                 with open(filename, 'r') as fin:
-                    fin= fin.readlines()
-                #######################################gets ver number    
-                ver=fin[:5]#gets first 5 lines
+                    fin = fin.readlines()
+                #######################################gets ver number
+                ver = fin[:5]#gets first 5 lines
                 for i in ver:
                     if "Auto-Rigger v" in i:
-                        b=i.find('v')
-                        ver_num= float(i[b+1:b+4])
+                        b = i.find('v')
+                        ver_num = float(i[b + 1:b + 4])
                         break
+
 
                 ########################################
 
 
-                if ver_num ==None:
+                if ver_num == None:
                     self.error("This file is not compatable")
                     return 
-                text=fin[-10:] #last ten lines
+                text = fin[-10:] #last ten lines
                 
-                if ver_num >=1.8:
+                if ver_num >= 1.8:
                     
                     for i in text :
                         
                         if "boneList" in i and '[' in i:
                             
-                            b=(i.find("["))
-                            bonelist=ast.literal_eval(i[b:])###get the bone list        
+                            b = (i.find("["))
+                            bonelist = ast.literal_eval(i[b:])###get the bone list
 
-                            index=self.handR.findText(bonelist[14])
-                            self.handR.setCurrentIndex(index)
-			    
-                            index=self.handR.findText(bonelist[22])
+                           
+                            for bone in bonelist:
+                                if bone not in self.bonename_to_obj.keys() and bone:
+                                    self.warn("Missing bones:\n\nCould not find '" + bone + "' on " + animSet.GetName())
+                                    return 
+
+                           
+
+
+                            
+                            index = self.bone_handR.findText(bonelist[14])
+                            
+                            self.bone_handR.setCurrentIndex(index)
+                            
+                            index = self.bone_handR.findText(bonelist[22])
                             self.bone_handL.setCurrentIndex(index)
+                                
+                            index = self.bone_handR.findText(bonelist[7])
+                            self.bone_upperlegR.setCurrentIndex(index)
 
-                            index=self.handR.findText(bonelist[1])
-                            self.bone_spine0.setCurrentIndex(index)                           
+                            index = self.bone_handR.findText(bonelist[15])
+                            self.bone_upperlegL.setCurrentIndex(index)
+                            
+                            index = self.bone_handR.findText(bonelist[8])
+                            self.bone_lowerlegR.setCurrentIndex(index)
 
+                            index = self.bone_handR.findText(bonelist[16])
+                            self.bone_lowerlegL.setCurrentIndex(index)
 
+                            index = self.bone_handR.findText(bonelist[20])
+                            self.bone_upperarmL.setCurrentIndex(index)
 
-                            index=self.handR.findText(bonelist[6])    
+                            index = self.bone_handR.findText(bonelist[12])
+                            self.upperarmR.setCurrentIndex(index)
+
+                            index = self.bone_handR.findText(bonelist[21])
+                            self.bone_lowerarmL.setCurrentIndex(index)
+                            
+                            index = self.bone_handR.findText(bonelist[13])
+                            self.bone_lowerarmR.setCurrentIndex(index)
+
+                            index = self.bone_handR.findText(bonelist[1])
+                            self.bone_spine0.setCurrentIndex(index)
+
+                            index = self.bone_handR.findText(bonelist[6])    
                             self.bone_head.setCurrentIndex(index)
-			    
-                            index=self.handR.findText(bonelist[5]) 
-                            self.bone_neck.setCurrentIndex(index)
-			    
-                            index=self.handR.findText(bonelist[0])
+                            
+                            if bonelist[5]:
+                                index = self.bone_handR.findText(bonelist[5]) 
+                                self.bone_neck.setCurrentIndex(index)
+                                self.Neckoption.setChecked(True) 
+
+                            else:
+                                self.Neckoption.setChecked(False) 
+                            index = self.bone_handR.findText(bonelist[0])
                             self.bone_pelvis.setCurrentIndex(index)
 
+                            index = self.bone_handR.findText(bonelist[9])
+                            self.bone_footR.setCurrentIndex(index)
+                            
+                            index = self.bone_handR.findText(bonelist[17])
+                            self.bone_footL.setCurrentIndex(index)                    
 
-                            index=self.handR.findText(bonelist[9])
-                            self.bone_footR.setCurrentIndex(index)                            
-                            index=self.handR.findText(bonelist[17])
-                            self.bone_footL.setCurrentIndex(index)
                             
 
                         
                         if "BuildRig" in i:
-			    b=i.find('(')
-			    
-			    e=i.find(')')
-			    
-                            inputlist=i[b+1:e].split(',')
-			    
-                            num=(int(inputlist[0])) #spine number
+                            b = i.find('(')
                             
-                            axis=inputlist[4]
-			    if '-'in axis:
-				self.footroll_negative_checkbox.setChecked(True)			    
+                            e = i.find(')')
+                            
+                            inputlist = i[b + 1:e].split(',')
+                            
+                            num = (int(inputlist[0])) #spine number
+                            
+                            axis = inputlist[4]
+                            if '-' in axis:
+                                self.footroll_negative_checkbox.setChecked(True)			    
                             if  'z' in axis:
                                 
                                 self.footroll_checkbox.setChecked(True)
@@ -173,15 +196,15 @@ class Ui_window(QtGui.QMainWindow):
                             elif 'y' in axis:
                                 self.footroll_checkbox.setChecked(True)
                                 self.foot_y.setChecked(True)			
-				
+                                
                             else:
                                 self.footroll_checkbox.setChecked(False)
 
                             
-                            if inputlist[1]=='True':#toe option
-                                index=self.handR.findText(bonelist[18])
+                            if inputlist[1] == 'True':#toe option
+                                index = self.bone_handR.findText(bonelist[18])
                                 self.bone_toeL.setCurrentIndex(index)
-                                index=self.handR.findText(bonelist[10])
+                                index = self.bone_handR.findText(bonelist[10])
                                 self.bone_toeR.setCurrentIndex(index)
                                 self.toeoption.setChecked(True)
                                 self.footroll_checkbox.setEnabled(True)
@@ -192,53 +215,53 @@ class Ui_window(QtGui.QMainWindow):
                               ########################
 
                                 
-                            if inputlist[2]=='True':##collar option
-                                index=self.handR.findText(bonelist[11])
+                            if inputlist[2] == 'True':##collar option
+                                index = self.bone_handR.findText(bonelist[11])
                                 self.bone_collarR.setCurrentIndex(index)
-                                index=self.handR.findText(bonelist[19])
+                                index = self.bone_handR.findText(bonelist[19])
                                 self.bone_collarL.setCurrentIndex(index)
                                 self.shoulderoption.setChecked(True)
                             else:
                                 self.shoulderoption.setChecked(False)
                                 
                             
-			    if inputlist[5]=='True':#for rigfingers
-				
-				self.rig_fingers_checkbox.setChecked(True)
-			    else:
-				self.rig_fingers_checkbox.setChecked(False)
-				
-				
-				
+                            if inputlist[5] == 'True':#for rigfingers
+                                
+                                self.rig_fingers_checkbox.setChecked(True)
+                            else:
+                                self.rig_fingers_checkbox.setChecked(False)
+                                
+                                
+                                
                               ##spine
                             
                             if num == 1:
                                 self.sp1.setChecked(True)
-                                index=self.handR.findText(bonelist[1])
+                                index = self.bone_handR.findText(bonelist[1])
                                 self.bone_spine0.setCurrentIndex(index)
                             elif num == 2:
                                 self.sp2.setChecked(True)
-                                index=self.handR.findText(bonelist[2])
+                                index = self.bone_handR.findText(bonelist[2])
                                 self.bone_spine1.setCurrentIndex(index)
 
                             elif num == 3:
                                 self.sp3.setChecked(True)
-                                index=self.handR.findText(bonelist[3])
+                                index = self.bone_handR.findText(bonelist[3])
                                 self.bone_spine2.setCurrentIndex(index)
                                 
-                                index=self.handR.findText(bonelist[2])
+                                index = self.bone_handR.findText(bonelist[2])
                                 self.bone_spine1.setCurrentIndex(index)
                             elif num == 4:
                                 self.sp4.setChecked(True)
-                                index=self.handR.findText(bonelist[4])
+                                index = self.bone_handR.findText(bonelist[4])
                                 self.bone_spine3.setCurrentIndex(index)
                                 
-                                index=self.handR.findText(bonelist[3])
+                                index = self.bone_handR.findText(bonelist[3])
                                 self.bone_spine2.setCurrentIndex(index)
-                                index=self.handR.findText(bonelist[2])
+                                index = self.bone_handR.findText(bonelist[2])
                                 self.bone_spine1.setCurrentIndex(index)
                                 
-                                index=self.handR.findText(bonelist[1])
+                                index = self.bone_handR.findText(bonelist[1])
                                 self.bone_spine0.setCurrentIndex(index)
                                 
                                 
@@ -246,112 +269,114 @@ class Ui_window(QtGui.QMainWindow):
 
 
 
-                if ver_num <1.5:
+                if ver_num < 1.5:
                     self.error("This version is no longer supported")
                     return
-                if ver_num <1.8 and ver_num >= 1.5:
+                if ver_num < 1.8 and ver_num >= 1.5:
                     
                     for i in text :
                         
                         if "boneList" in i and '[' in i:
-                            b=(i.find("["))
-                            bonelist=ast.literal_eval(i[b:])###get the bone list        
+                            b = (i.find("["))
+                            bonelist = ast.literal_eval(i[b:])###get the bone list
+                            for bone in bonelist:
+                                if bone not in self.bonename_to_obj.keys():
+                                    self.warn("Missing bones:\n\nCould not find '" + bone + "'")
+                                    return 
 
-                            index=self.handR.findText(bonelist[14])
-                            self.handR.setCurrentIndex(index)
-                            index=self.handR.findText(bonelist[22])
+                            index = self.bone_handR.findText(bonelist[14])
+                            self.bone_handR.setCurrentIndex(index)
+                            
+                            index = self.bone_handR.findText(bonelist[22])
                             self.bone_handL.setCurrentIndex(index)
-
-
                                 
-                            index=self.handR.findText(bonelist[7])
+                            index = self.bone_handR.findText(bonelist[7])
                             self.bone_upperlegR.setCurrentIndex(index)
 
-
-
-                            index=self.handR.findText(bonelist[15])
+                            index = self.bone_handR.findText(bonelist[15])
                             self.bone_upperlegL.setCurrentIndex(index)
-                            index=self.handR.findText(bonelist[8])
+                            
+                            index = self.bone_handR.findText(bonelist[8])
                             self.bone_lowerlegR.setCurrentIndex(index)
 
-                            index=self.handR.findText(bonelist[16])
+                            index = self.bone_handR.findText(bonelist[16])
                             self.bone_lowerlegL.setCurrentIndex(index)
 
-                            index=self.handR.findText(bonelist[20])
+                            index = self.bone_handR.findText(bonelist[20])
                             self.bone_upperarmL.setCurrentIndex(index)
 
-                            index=self.handR.findText(bonelist[12])
+                            index = self.bone_handR.findText(bonelist[12])
                             self.upperarmR.setCurrentIndex(index)
 
-                            index=self.handR.findText(bonelist[21])
+                            index = self.bone_handR.findText(bonelist[21])
                             self.bone_lowerarmL.setCurrentIndex(index)
-                            index=self.handR.findText(bonelist[13])
+                            
+                            index = self.bone_handR.findText(bonelist[13])
                             self.bone_lowerarmR.setCurrentIndex(index)
 
-                            index=self.handR.findText(bonelist[1])
+                            index = self.bone_handR.findText(bonelist[1])
                             self.bone_spine0.setCurrentIndex(index)
-                            
 
-
-
-                            index=self.handR.findText(bonelist[6])    
+                            index = self.bone_handR.findText(bonelist[6])    
                             self.bone_head.setCurrentIndex(index)
-                            index=self.handR.findText(bonelist[5]) 
+                            
+                            index = self.bone_handR.findText(bonelist[5]) 
                             self.bone_neck.setCurrentIndex(index)
-                            index=self.handR.findText(bonelist[0])
+                            
+                            index = self.bone_handR.findText(bonelist[0])
                             self.bone_pelvis.setCurrentIndex(index)
 
-
-                            index=self.handR.findText(bonelist[9])
-                            self.bone_footR.setCurrentIndex(index)                            
-                            index=self.handR.findText(bonelist[17])
+                            index = self.bone_handR.findText(bonelist[9])
+                            self.bone_footR.setCurrentIndex(index)
+                            
+                            index = self.bone_handR.findText(bonelist[17])
                             self.bone_footL.setCurrentIndex(index)                    
 
                         
                         if "BuildRig" in i:
                             
-                            num=(int(i[9])) #spine number
+                            num = (int(i[9])) #spine number
                            
                             return
-                            if i[11]=='T':#toe option
-                                index=self.handR.findText(bonelist[18])
+                            if i[11] == 'T':#toe option
+                                index = self.bone_handR.findText(bonelist[18])
                                 self.bone_toeL.setCurrentIndex(index)
-                                index=self.handR.findText(bonelist[10])
+                                index = self.bone_handR.findText(bonelist[10])
                                 self.bone_toeR.setCurrentIndex(index)
                             else:
                                 self.toeoption.setChecked(False)
                               ########################
 
                                 
-                            if i[16]=="T":##collar option
-                                index=self.handR.findText(bonelist[11])
+                            if i[16] == "T":##collar option
+                                index = self.bone_handR.findText(bonelist[11])
                                 self.bone_collarR.setCurrentIndex(index)
-                                index=self.handR.findText(bonelist[19])
+                                index = self.bone_handR.findText(bonelist[19])
                                 self.bone_collarL.setCurrentIndex(index)
                             else:
                                 self.shoulderoption.setChecked(False)
 
-                              ##spine  
+                              ##spine
                             if num == 2:
                                 self.sp2.setChecked(True)
-                                index=self.handR.findText(bonelist[2])
+                                index = self.bone_handR.findText(bonelist[2])
                                 self.bone_spine1.setCurrentIndex(index)
 
                             elif num == 3:
                                 self.sp3.setChecked(True)
-                                index=self.handR.findText(bonelist[3])
+                                index = self.bone_handR.findText(bonelist[3])
                                 self.bone_spine2.setCurrentIndex(index)
                                 
-                                index=self.handR.findText(bonelist[2])
+                                index = self.bone_handR.findText(bonelist[2])
                                 self.bone_spine1.setCurrentIndex(index)
                             elif num == 4:
                                 self.sp4.setChecked(True)
-                                index=self.handR.findText(bonelist[4])
+                                index = self.bone_handR.findText(bonelist[4])
                                 self.bone_spine3.setCurrentIndex(index)
                                 
-                                index=self.handR.findText(bonelist[3])
+                                index = self.bone_handR.findText(bonelist[3])
                                 self.bone_spine2.setCurrentIndex(index)
-                                index=self.handR.findText(bonelist[2])
+                                index = self.bone_handR.findText(bonelist[2])
                                 self.bone_spine1.setCurrentIndex(index)
                             break
 
@@ -377,29 +402,29 @@ class Ui_window(QtGui.QMainWindow):
 
 
 ##============================================
-##auto finds  and selects the right bone name 
+##auto finds and selects the right bone name
 ##============================================
     def find(self,lst):
         #common bone names can add more if need to
         handr_list = ['hand_r', 'r_hand', 'r hand','hand r','handr','wrist_r', 'r_wrist', 'r wrist','wrist r','wristr']
         handL_list = ['hand_l', 'l_hand', 'l hand','hand l','wrist_l', 'l_wrist', 'l wrist','wrist l','wristl','handl']
         
-        collarR_list=['collarr','r_clavicle','clavicle_r','clavicle r','r clavicle','r_collar','collar_r','collar r','r collar','r_shoulder','shoulder_r','shoulder r','r shoulder']
-        collarL_list=['collarl','l_clavicle','clavicle_l','clavicle l','l clavicle','l_collar','collar_l','collar l','l collar','l_shoulder','shoulder_l','shoulder l','l shoulder']
+        collarR_list = ['collarr','r_clavicle','clavicle_r','clavicle r','r clavicle','r_collar','collar_r','collar r','r collar','r_shoulder','shoulder_r','shoulder r','r shoulder']
+        collarL_list = ['collarl','l_clavicle','clavicle_l','clavicle l','l clavicle','l_collar','collar_l','collar l','l collar','l_shoulder','shoulder_l','shoulder l','l shoulder']
         
 
 
         for name in handr_list:
             for i in lst:
                 if name in i.lower():
-                    index=self.bone_head.findText(i)
-                    self.handR.setCurrentIndex(index)
+                    index = self.bone_head.findText(i)
+                    self.bone_handR.setCurrentIndex(index)
 
                     
         for name in handL_list:
             for i in lst:
                 if name in i.lower():
-                    index=self.bone_head.findText(i)
+                    index = self.bone_head.findText(i)
                     self.bone_handL.setCurrentIndex(index)
                     break
 
@@ -408,14 +433,14 @@ class Ui_window(QtGui.QMainWindow):
         for name in collarR_list:
             for i in lst:
                 if name in i.lower():
-                    index=self.bone_head.findText(i)
+                    index = self.bone_head.findText(i)
                     self.bone_collarR.setCurrentIndex(index)
                     break
 
         for name in collarL_list:
             for i in lst:
                 if name in i.lower():
-                    index=self.bone_head.findText(i)
+                    index = self.bone_head.findText(i)
                     self.bone_collarL.setCurrentIndex(index)
                     break
 
@@ -427,19 +452,14 @@ class Ui_window(QtGui.QMainWindow):
 
 
         for name in lst:
-
-            if name.lower().find('spine0')!=-1 or name.lower().find('spine_0')!=-1 or name.lower().find('spine')!=-1  :
-                index = self.bone_head.findText(name)
-                self.bone_spine0.setCurrentIndex(index)
-                break
-
-
-
-        for name in lst:
             
-            if name.lower().find('bip_head')!=-1 or name.lower().find('head')!=-1:
-                index=self.bone_head.findText(name)
+            if name.lower().find('bip_head') != -1 or name.lower().find('head') != -1:
+
+                
+                index = self.bone_head.findText(name)
                 self.bone_head.setCurrentIndex(index)
+
+                
                 break
 
 
@@ -449,47 +469,60 @@ class Ui_window(QtGui.QMainWindow):
             
 
                 
-                
-            if name.lower().find('neck')!=-1:
-                index=self.bone_head.findText(name)
+            
+            if name.lower().find('neck') != -1:
+                index = self.bone_head.findText(name)
                 self.bone_neck.setCurrentIndex(index)
                 
-            if name.lower().find('pelvis')!=-1:
-                index=self.bone_head.findText(name)
+            if name.lower().find('pelvis') != -1:
+                index = self.bone_head.findText(name)
                 self.bone_pelvis.setCurrentIndex(index)
                 
-
-            
-            if name.lower().find('spine1')!=-1 or name.lower().find('spine_1')!=-1:
-                index=self.bone_head.findText(name)
+            if re.search(r'spine\D*0*$', name, re.I):#spine0
+                
+                
+                index = self.bone_head.findText(name)
+                self.bone_spine0.setCurrentIndex(index)
+            if re.search(r'spine\D?.?1+', name, re.I):#spine1
+                
+                
+                index = self.bone_head.findText(name)
                 self.bone_spine1.setCurrentIndex(index)
                 
-            if name.lower().find('spine2')!=-1 or name.lower().find('spine_2')!=-1:
-                index=self.bone_head.findText(name)
-                self.bone_spine2.setCurrentIndex(index)
+            if re.search(r'spine\D?.?2+', name, re.I):#spine2
+                    
+                    
+                index = self.bone_head.findText(name)
+                self.bone_spine2.setCurrentIndex(index)		
                 
-            if name.lower().find('spine3')!=-1 or name.lower().find('spine4')!=-1 or name.lower().find('spine_3')!=-1:
-                index=self.bone_head.findText(name)
-                self.bone_spine3.setCurrentIndex(index)
+
+            if re.search(r'spine\D?.?[3,4]+', name, re.I):#spine3
+                    
+                    
+                index = self.bone_head.findText(name)
+                self.bone_spine3.setCurrentIndex(index)                
 
 
-            if  name.lower().find('footL')!=-1 or name.lower().find('l_foot')!=-1 or name.lower().find('foot_l')!=-1 or name.lower().find('foot l')!=-1 or name.lower().find('l foot')!=-1 or name.lower().find('ankle_l')!=-1 or name.lower().find('ankle l')!=-1 or name.lower().find('l ankle')!=-1:
-                index=self.bone_head.findText(name)
+
+
+
+            if  name.lower().find('footL') != -1 or name.lower().find('l_foot') != -1 or name.lower().find('foot_l') != -1 or name.lower().find('foot l') != -1 or name.lower().find('l foot') != -1 or name.lower().find('ankle_l') != -1 or name.lower().find('ankle l') != -1 or name.lower().find('l ankle') != -1:
+                index = self.bone_head.findText(name)
                 self.bone_footL.setCurrentIndex(index)
                 
-            if  name.lower().find('footr')!=-1 or name.lower().find('r_foot')!=-1 or name.lower().find('foot_r')!=-1 or name.lower().find('foot r')!=-1 or name.lower().find('r foot')!=-1 or name.lower().find('ankle_r')!=-1 or name.lower().find('ankle r')!=-1 or name.lower().find('r ankle')!=-1:
-                index=self.bone_head.findText(name)
+            if  name.lower().find('footr') != -1 or name.lower().find('r_foot') != -1 or name.lower().find('foot_r') != -1 or name.lower().find('foot r') != -1 or name.lower().find('r foot') != -1 or name.lower().find('ankle_r') != -1 or name.lower().find('ankle r') != -1 or name.lower().find('r ankle') != -1:
+                index = self.bone_head.findText(name)
                 self.bone_footR.setCurrentIndex(index)
 
 
 
-            if  name.lower().find('toer')!=-1 or name.lower().find('r_toe')!=-1 or name.lower().find('toe_r')!=-1 or name.lower().find('toe r')!=-1 or name.lower().find('r toe')!=-1 or name.lower().find('toebase_r')!=-1:
-                index=self.bone_head.findText(name)
+            if  name.lower().find('toer') != -1 or name.lower().find('r_toe') != -1 or name.lower().find('toe_r') != -1 or name.lower().find('toe r') != -1 or name.lower().find('r toe') != -1 or name.lower().find('toebase_r') != -1:
+                index = self.bone_head.findText(name)
                 self.bone_toeR.setCurrentIndex(index)
 
 
-            if  name.lower().find('toel')!=-1 or name.lower().find('l_toe')!=-1 or name.lower().find('toe_l')!=-1 or name.lower().find('toe l')!=-1 or name.lower().find('l toe')!=-1 or name.lower().find('toebase_l')!=-1:
-                index=self.bone_head.findText(name)
+            if  name.lower().find('toel') != -1 or name.lower().find('l_toe') != -1 or name.lower().find('toe_l') != -1 or name.lower().find('toe l') != -1 or name.lower().find('l toe') != -1 or name.lower().find('toebase_l') != -1:
+                index = self.bone_head.findText(name)
                 self.bone_toeL.setCurrentIndex(index)
 
 
@@ -497,36 +530,47 @@ class Ui_window(QtGui.QMainWindow):
 
 
 
+        self.autopick_toogle.setChecked(True)
+        self.autopick_toogle_checked()
+        self.autopick_toogle.setChecked(False)
 
 
-
-	    # auto picks the parent and grandparent for ik 
+            # auto picks the parent and grandparent for ik
     def autofind(self,child,parent,grandparent):
         #print num
-	#print child.currentText()
-	boneRoot = self.bonename_to_obj[child.currentText()]
-	
-	#print str(boneRoot.GetParent().GetParent())
-	#help(boneRoot)
-	if "bone" not in str(boneRoot.GetParent().GetParent()):
-		
-		return	
-	
-	
-	b=str(boneRoot.GetParent().GetName()).find('(')
-	e=str(boneRoot.GetParent().GetName()).find(')')
-	boneparent=str(boneRoot.GetParent().GetName())[b+1:e]	
-	
-	
-	b=str(boneRoot.GetParent().GetParent().GetName()).find('(')
-	e=str(boneRoot.GetParent().GetParent().GetName()).find(')')
-	bonegrandparent=str(boneRoot.GetParent().GetParent().GetName())[b+1:e]	
-	
-	
-	parent.setCurrentIndex(parent.findText(boneparent))
-	
-	grandparent.setCurrentIndex(parent.findText(bonegrandparent))
-	
+        
+        
+        if  not self.autopick_toogle.isChecked():
+            
+            return
+
+        try:
+        
+            boneRoot = self.bonename_to_obj[child.currentText()]
+            
+            #print str(boneRoot.GetParent().GetParent())
+            #help(boneRoot)
+            if "bone" not in str(boneRoot.GetParent().GetParent()):
+                    
+                    return	
+            
+            
+            b = str(boneRoot.GetParent().GetName()).find('(')
+            e = str(boneRoot.GetParent().GetName()).find(')')
+            boneparent = str(boneRoot.GetParent().GetName())[b + 1:e]	
+            
+            
+            b = str(boneRoot.GetParent().GetParent().GetName()).find('(')
+            e = str(boneRoot.GetParent().GetParent().GetName()).find(')')
+            bonegrandparent = str(boneRoot.GetParent().GetParent().GetName())[b + 1:e]	
+            
+            
+            parent.setCurrentIndex(parent.findText(boneparent))
+            
+            grandparent.setCurrentIndex(parent.findText(bonegrandparent))
+        except  Exception  as error:
+            print("Autofind Error Caught: " + error)
+            return
     def Message(self,text):
         #message box
 
@@ -545,7 +589,21 @@ class Ui_window(QtGui.QMainWindow):
         #error box
 
         msgBox = QtGui.QMessageBox(QtGui.QMessageBox.Critical,
-                "ERROR", "File could not be created error: \n\n"+str(e),
+                "ERROR", "File could not be created error: \n\n" + str(e),
+                QtGui.QMessageBox.NoButton, self)
+
+        font = QtGui.QFont()
+        font.setPointSize(11)
+        msgBox.setFont(font)
+        msgBox.addButton("&Continue", QtGui.QMessageBox.RejectRole)
+        if msgBox.exec_() == QtGui.QMessageBox.AcceptRole:pass
+
+
+    def warn(self,e):
+        #error box
+
+        msgBox = QtGui.QMessageBox(QtGui.QMessageBox.Warning,
+                "Warning",str(e),
                 QtGui.QMessageBox.NoButton, self)
 
         font = QtGui.QFont()
@@ -556,44 +614,42 @@ class Ui_window(QtGui.QMainWindow):
 
 
 
-
-
     def main(self):
 
         #gets bone name from user
-        head=       self.bone_head.currentText()
-        footL=      self.bone_footL.currentText()
-        footR=      self.bone_footR.currentText()
-        spine0=     self.bone_spine0.currentText()
-        spine1=     self.bone_spine1.currentText()
-        spine2=     self.bone_spine2.currentText()
-        spine3=     self.bone_spine3.currentText()
-        neck=       self.bone_neck.currentText()
-        lowarmL=    self.bone_lowerarmL.currentText()
-        lowarmR=    self.bone_lowerarmR.currentText()
-        uparmL=     self.bone_upperarmL.currentText()
-        uparmR=     self.upperarmR.currentText()
-        pelvis=     self.bone_pelvis.currentText()
-        uplegR=     self.bone_upperlegR.currentText()
-        uplegL=     self.bone_upperlegL.currentText()
-        lowlegR=    self.bone_lowerlegR.currentText()
-        lowlegL=    self.bone_lowerlegL.currentText()
-        footR=      self.bone_footR.currentText()
-        footL=      self.bone_footL.currentText()
-        toeR=       self.bone_toeR.currentText()
-        toeL=       self.bone_toeL.currentText()
-        handR=      self.handR.currentText()
-        handL=      self.bone_handL.currentText()
-        collR=      self.bone_collarR.currentText()
-        collL=      self.bone_collarL.currentText()
+        head = self.bone_head.currentText()
+        footL = self.bone_footL.currentText()
+        footR = self.bone_footR.currentText()
+        spine0 = self.bone_spine0.currentText()
+        spine1 = self.bone_spine1.currentText()
+        spine2 = self.bone_spine2.currentText()
+        spine3 = self.bone_spine3.currentText()
+        neck = self.bone_neck.currentText() if self.Neckoption.isChecked() else None
+        lowarmL = self.bone_lowerarmL.currentText()
+        lowarmR = self.bone_lowerarmR.currentText()
+        uparmL = self.bone_upperarmL.currentText()
+        uparmR = self.upperarmR.currentText()
+        pelvis = self.bone_pelvis.currentText()
+        uplegR = self.bone_upperlegR.currentText()
+        uplegL = self.bone_upperlegL.currentText()
+        lowlegR = self.bone_lowerlegR.currentText()
+        lowlegL = self.bone_lowerlegL.currentText()
+        footR = self.bone_footR.currentText()
+        footL = self.bone_footL.currentText()
+        toeR = self.bone_toeR.currentText()
+        toeL = self.bone_toeL.currentText()
+        handR = self.bone_handR.currentText()
+        handL = self.bone_handL.currentText()
+        collR = self.bone_collarR.currentText()
+        collL = self.bone_collarL.currentText()
 #===============================================================================================================================
 #the script file template
 #===============================================================================================================================
 
 
 
-        script="""
-#created with Auto-Rigger v1.9 for biped models
+        script = """
+#created with Auto-Rigger v1.9.3 for biped models
 #BY http://steamcommunity.com/id/OMGTheresABearInMyOatmeal/
 #This is just a modified version of valves' biped simple script.
 
@@ -671,9 +727,30 @@ def parent_rig_fingers(rig_root,fingerdict):
         sfmUtils.ParentMaintainWorld( child,fingerdict[child] )
             
 
-
+def getmodelfacingvector(bone_handL, bone_handR):
+    #finds which axis the model is facing for knee/elbow 
+    handL_x_pos= bone_handL.GetAbsPosition().x
+    handL_y_pos= bone_handL.GetAbsPosition().y
+    
+    handR_x_pos= bone_handR.GetAbsPosition().x
+    handR_y_pos= bone_handR.GetAbsPosition().y
 
     
+
+        
+    if abs(handR_x_pos-handL_x_pos)<3:
+        if handR_y_pos>handL_y_pos:
+            return  vs.Vector( -10, 0, 0 )
+        else:
+            return vs.Vector( 10, 0, 0 )
+
+
+        
+    else:
+        if handR_x_pos>handL_x_pos:
+            return vs.Vector( 0, 10, 0 )
+        else:
+            return  vs.Vector( 0, -10, 0 )
 
 
 
@@ -905,8 +982,17 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         rigSpine1  = "null"
         rigSpine2  = "null"
         rigChest   = "null"
-        
-    boneNeck      = sfmUtils.FindFirstDag( [ bone[5] ], True )
+
+
+    if bone[5]:   
+        boneNeck      = sfmUtils.FindFirstDag( [ bone[5] ], True ) 
+        rigNeck    = sfmUtils.CreateConstrainedHandle( "rig_neck",     boneNeck,    bCreateControls=False )
+
+    else:
+        rigNeck="null"
+
+
+
     boneHead      = sfmUtils.FindFirstDag( [ bone[6]  ], True )
     boneUpperLegR = sfmUtils.FindFirstDag( [ bone[7]  ], True )
     boneLowerLegR = sfmUtils.FindFirstDag( [ bone[8] ], True )
@@ -971,7 +1057,8 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
     #==============================================================================================
     rigRoot    = sfmUtils.CreateConstrainedHandle( "rig_root",     boneRoot,    bCreateControls=False )
     rigPelvis  = sfmUtils.CreateConstrainedHandle( "rig_pelvis",   bonePelvis,  bCreateControls=False )
-    rigNeck    = sfmUtils.CreateConstrainedHandle( "rig_neck",     boneNeck,    bCreateControls=False )
+    
+
     rigHead    = sfmUtils.CreateConstrainedHandle( "rig_head",     boneHead,    bCreateControls=False )
     rigFootR   = sfmUtils.CreateConstrainedHandle( "rig_foot_R",   boneFootR,   bCreateControls=False )
     rigHandR   = sfmUtils.CreateConstrainedHandle( "rig_hand_R",   boneHandR,   bCreateControls=False )
@@ -985,8 +1072,8 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         vKneeOffsetR = ComputeVectorBetweenBones( boneFootR, boneToeR, 10 )
         vKneeOffsetL = ComputeVectorBetweenBones( boneFootL, boneToeL, 10 )
     else:
-        vKneeOffsetR = ComputeVectorBetweenBones( boneFootR, boneFootR, 10 )
-        vKneeOffsetL = ComputeVectorBetweenBones( boneFootL, boneFootL, 10 )
+        vKneeOffsetR = getmodelfacingvector(boneHandL,boneHandR)
+        vKneeOffsetL = vKneeOffsetR
 
 
     rigKneeR   = sfmUtils.CreateOffsetHandle( "rig_knee_R",  boneLowerLegR, vKneeOffsetR,  bCreateControls=False )
@@ -1027,7 +1114,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         bone_finger_left=dag_fingers[:]
 
         
-    allRigHandles.extend(rig_finger_left.keys()+rig_finger_right.keys())
+        allRigHandles.extend(rig_finger_left.keys()+rig_finger_right.keys())
     #==============================================================================================
     # Generate the world space logs for the rig handles and remove the constraints
     #==============================================================================================
@@ -1051,7 +1138,11 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         sfmUtils.ParentMaintainWorld( rigSpine1,        rigSpine0 )
         sfmUtils.ParentMaintainWorld( rigSpine2,        rigSpine1 )
         sfmUtils.ParentMaintainWorld( rigChest,         rigSpine2 )
-        sfmUtils.ParentMaintainWorld( rigNeck,          rigChest )
+        if rigNeck != "null":
+            sfmUtils.ParentMaintainWorld( rigNeck,          rigChest )
+        else:
+            sfmUtils.ParentMaintainWorld( rigHead,          rigChest )
+
         if collar:
             sfmUtils.ParentMaintainWorld( rigCollarR,       rigChest )
             sfmUtils.ParentMaintainWorld( rigCollarL,       rigChest )
@@ -1062,7 +1153,10 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
     elif num==3:
         sfmUtils.ParentMaintainWorld( rigSpine1,        rigSpine0 )
         sfmUtils.ParentMaintainWorld( rigSpine2,        rigSpine1 )
-        sfmUtils.ParentMaintainWorld( rigNeck,         rigSpine2 )
+        if rigNeck != "null":
+            sfmUtils.ParentMaintainWorld( rigNeck,         rigSpine2 )
+        else:
+            sfmUtils.ParentMaintainWorld( rigHead,         rigSpine2 )
 
         if collar:
             sfmUtils.ParentMaintainWorld( rigCollarR,       rigSpine2 )
@@ -1074,8 +1168,10 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
 
     elif num==2:
         sfmUtils.ParentMaintainWorld( rigSpine1,        rigSpine0 )
-        sfmUtils.ParentMaintainWorld( rigNeck,        rigSpine1 )
-          
+        if rigNeck != "null":
+            sfmUtils.ParentMaintainWorld( rigNeck,        rigSpine1 )
+        else:  
+            sfmUtils.ParentMaintainWorld( rigHead,        rigSpine1 )
 
         if collar:
             sfmUtils.ParentMaintainWorld( rigCollarR,       rigSpine1 )
@@ -1087,9 +1183,10 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
             
 
     elif num==1:
-        
-        sfmUtils.ParentMaintainWorld( rigNeck,        rigSpine0 )
-          
+        if rigNeck != "null":
+            sfmUtils.ParentMaintainWorld( rigNeck,        rigSpine0 )
+        else:  
+            sfmUtils.ParentMaintainWorld( rigHead,        rigSpine0 )
 
         if collar:
             sfmUtils.ParentMaintainWorld( rigCollarR,       rigSpine0 )
@@ -1099,8 +1196,11 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
             sfmUtils.ParentMaintainWorld( rigElbowL,       rigSpine0 )
 
         
-      
-    sfmUtils.ParentMaintainWorld( rigHead,          rigNeck )
+    if rigNeck != "null":
+        sfmUtils.ParentMaintainWorld( rigHead,          rigNeck )
+
+
+
     sfmUtils.ParentMaintainWorld( rigFootHelperR,   rigRoot )
     sfmUtils.ParentMaintainWorld( rigFootHelperL,   rigRoot )
     sfmUtils.ParentMaintainWorld( rigFootR,         rigRoot )
@@ -1207,8 +1307,8 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         
 
 
-        
-    sfmUtils.CreatePointOrientConstraint( rigNeck,      boneNeck        )
+    if rigNeck!= "null":
+        sfmUtils.CreatePointOrientConstraint( rigNeck,      boneNeck        )
     sfmUtils.CreatePointOrientConstraint( rigHead,      boneHead        )
     if collar:
         sfmUtils.CreatePointOrientConstraint( rigCollarR,   boneCollarR     )
@@ -1282,19 +1382,32 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
     RightLegGroup = rootGroup.CreateControlGroup( "RightLeg" )
     LeftLegGroup = rootGroup.CreateControlGroup( "LeftLeg" )
 
+    DagArray=[rigRoot, rigPelvis, rigHips, rigSpine0]
 
+    if num==4:    
+        DagArray.extend([rigSpine1, rigSpine2, rigChest])        
 
-    if num==4:
-        sfmUtils.AddDagControlsToGroup( rigBodyGroup, rigRoot, rigPelvis, rigHips, rigSpine0, rigSpine1, rigSpine2, rigChest, rigNeck, rigHead )
+    elif num==3:    
+        
+        DagArray.extend([rigSpine1, rigSpine2])
 
-    elif num==3:     
-        sfmUtils.AddDagControlsToGroup( rigBodyGroup, rigRoot, rigPelvis, rigHips, rigSpine0, rigSpine1, rigSpine2, rigNeck, rigHead )
+        
 
 
     elif num==2:
-        sfmUtils.AddDagControlsToGroup( rigBodyGroup, rigRoot, rigPelvis, rigHips, rigSpine0, rigSpine1,rigNeck, rigHead )
-    elif num==1:
-        sfmUtils.AddDagControlsToGroup( rigBodyGroup, rigRoot, rigPelvis, rigHips, rigSpine0,rigNeck, rigHead )
+
+        DagArray.append(rigSpine1)
+
+    if rigNeck != "null":
+        DagArray.append(rigNeck)
+
+
+
+    DagArray.append(rigHead)
+
+
+    sfmUtils.AddDagControlsToGroup(rigBodyGroup, *DagArray)
+
 
 
 
@@ -1409,109 +1522,90 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
 """
 
         if self.sp1.isChecked() :
-            spine=1
-            spine1=None
-            spine2=None
-            spine3=None
+            spine = 1
+            spine1 = None
+            spine2 = None
+            spine3 = None
         
         elif  self.sp2.isChecked() :
-            spine=2
-            spine2=None
-            spine3=None
+            spine = 2
+            spine2 = None
+            spine3 = None
 
  
         elif  self.sp3.isChecked():
-            spine=3
-            spine3=None                
+            spine = 3
+            spine3 = None                
         elif  self.sp4.isChecked():
-            spine=4
+            spine = 4
 
         if  self.toeoption.isChecked() :
-            toe=True
+            toe = True
         else:
-            toe=False
-            toeL=None
+            toe = False
+            toeL = None
 
-            toeR=None
+            toeR = None
         if  self.shoulderoption.isChecked() :
-            collar=True
+            collar = True
         else:
-            collar=False
-            collL=None        
-            collR=None
+            collar = False
+            collL = None        
+            collR = None
 
 
 
 ############## #for footroll
         if self.footroll_checkbox.isChecked() :
             if self.foot_x.isChecked():
-                footroll="'x'"
+                footroll = "'x'"
             elif self.foot_y.isChecked():
-                footroll="'y'"
+                footroll = "'y'"
             elif self.foot_z.isChecked():                
-                footroll="'z'"
-		
-	    elif self.foot_x.isChecked() and self.footroll_negative_checkbox.isChecked():
-		    footroll="'-x'"	    
-            elif self.foot_y.isChecked()and self.footroll_negative_checkbox.isChecked():
-                footroll="'-y'"
-            elif self.foot_z.isChecked()and self.footroll_negative_checkbox.isChecked():                
-                footroll="'-z'"		
+                footroll = "'z'"
+                
+            elif self.foot_x.isChecked() and self.footroll_negative_checkbox.isChecked():
+                    footroll = "'-x'"	    
+            elif self.foot_y.isChecked() and self.footroll_negative_checkbox.isChecked():
+                footroll = "'-y'"
+            elif self.foot_z.isChecked() and self.footroll_negative_checkbox.isChecked():                
+                footroll = "'-z'"		
             else:
                 self.error("please pick footRoll rotation Axis")
                 return
             
         else:
 
-            footroll= None
+            footroll = None
 ########################
 
 
 
 
-        ##handpresent
-            
 
-        #if self.finger_checkBox.isChecked() :
-            #if self.finger_x.isChecked():
-                #handpreset="'x'"
-            #elif self.finger_y.isChecked():
-                #handpreset="'y'"
-            #elif self.finger_z.isChecked():
-                #handpreset="'z'"
-            #else:
-                #self.error("Please pick Finger rotation Axis")
-                #return                          
-        #else:
-            #handpreset= None
-########################
 
         
-        if self.rig_fingers_checkbox.isChecked:
-            fingerRig=True
-        else:
-            fingerRig=False
-
-
+        
+        fingerRig = self.rig_fingers_checkbox.isChecked()     
 
 
             
 
-        boneList=[pelvis,spine0,spine1,spine2,spine3,neck,head,uplegR,lowlegR,footR,toeR,collR,uparmR,lowarmR,handR,uplegL,lowlegL,footL,toeL,collL,uparmL,lowarmL,handL]
+        boneList = [pelvis,spine0,spine1,spine2,spine3,neck,head,uplegR,lowlegR,footR,toeR,collR,uparmR,lowarmR,handR,uplegL,lowlegL,footL,toeL,collL,uparmL,lowarmL,handL]
         
-        #creates script based on  #of spine & toe bones and collar bones
+        #creates script based on #of spine & toe bones and collar bones
         
         try:
 
-            fob=open("platform\\scripts\\sfm\\animset\\" + name,"w")
-            fob.write(script+"\nboneList= %s \nBuildRig(%s,%s,%s,boneList,%s,%s,%s);" %(boneList,spine,toe,collar,footroll,fingerRig,None))
+            fob = open("platform\\scripts\\sfm\\animset\\" + name,"w")
+            fob.write(script + "\nboneList= %s \nBuildRig(%s,%s,%s,boneList,%s,%s,%s);" % (boneList,spine,toe,collar,footroll,fingerRig,None))
             fob.close()
 
      
 
 
                 
-            self.Message("file '"+ name + "' was created and saved in\n 'game\\platform\\scripts\\sfm\\animset\\'")
+            self.Message("file '" + name + "' was created and saved in\n 'game\\platform\\scripts\\sfm\\animset\\'")
             
 
         except  IOError as e:
@@ -1525,6 +1619,15 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
 
         except  WindowsError as e:
             self.error(e)
+
+
+    def autopick_toogle_checked(self):
+        if self.autopick_toogle.isChecked():
+            self.autofind(self.bone_handL,self.bone_lowerarmL,self.bone_upperarmL)
+            self.autofind(self.bone_handR,self.bone_lowerarmR,self.upperarmR)
+            self.autofind(self.bone_footL,self.bone_lowerlegL,self.bone_upperlegL)
+            self.autofind(self.bone_footR,self.bone_lowerlegR,self.bone_upperlegR)
+
 
 
 
@@ -1542,7 +1645,8 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         window.setObjectName("window")
         window.resize(929, 455)
         #icon = QtGui.QIcon()
-        #icon.addPixmap(QtGui.QPixmap("platform/tools/images/sfm/sfm_app.png"), QtGui.QIcon.Normal, QtGui.QIcon.On)
+        #icon.addPixmap(QtGui.QPixmap("platform/tools/images/sfm/sfm_app.png"),
+        #QtGui.QIcon.Normal, QtGui.QIcon.On)
         #window.setWindowIcon(icon)
         self.gridLayout_4 = QtGui.QGridLayout(window)
         self.gridLayout_4.setContentsMargins(-1, -1, -1, 15)
@@ -1682,11 +1786,11 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.bone_footR.setObjectName("bone_footR")
         self.bone_footR.setMaxVisibleItems(30)
         self.gridLayout_2.addWidget(self.bone_footR, 2, 1, 1, 1)
-        self.handR = QtGui.QComboBox(self.groupBox_3)
-        self.handR.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
-        self.handR.setObjectName("handR")
-        self.handR.setMaxVisibleItems(30)
-        self.gridLayout_2.addWidget(self.handR, 3, 3, 1, 1)
+        self.bone_handR = QtGui.QComboBox(self.groupBox_3)
+        self.bone_handR.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
+        self.bone_handR.setObjectName("handR")
+        self.bone_handR.setMaxVisibleItems(30)
+        self.gridLayout_2.addWidget(self.bone_handR, 3, 3, 1, 1)
         self.label_16 = QtGui.QLabel(self.groupBox_3)
         self.label_16.setObjectName("label_16")
         self.gridLayout_2.addWidget(self.label_16, 1, 2, 1, 1)
@@ -1700,7 +1804,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.bone_toeR.setMaxVisibleItems(30)
         self.gridLayout_2.addWidget(self.bone_toeR, 3, 1, 1, 1)
         self.bone_lowerlegR = QtGui.QComboBox(self.groupBox_3)
-	
+        
         self.bone_lowerlegR.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
         self.bone_lowerlegR.setObjectName("bone_lowerlegR")
         self.bone_lowerlegR.setMaxVisibleItems(30)
@@ -1717,9 +1821,9 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.gridLayout_3.setSizeConstraint(QtGui.QLayout.SetMaximumSize)
         self.gridLayout_3.setContentsMargins(50, -1, -1, -1)
         self.gridLayout_3.setObjectName("gridLayout_3")
-        self.label_6 = QtGui.QLabel(self.groupBox)
-        self.label_6.setObjectName("label_6")
-        self.gridLayout_3.addWidget(self.label_6, 2, 4, 1, 1)
+        self.label_spine1 = QtGui.QLabel(self.groupBox)
+        self.label_spine1.setObjectName("label_6")
+        self.gridLayout_3.addWidget(self.label_spine1, 2, 4, 1, 1)
         self.bone_spine2 = QtGui.QComboBox(self.groupBox)
         self.bone_spine2.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
         self.bone_spine2.setObjectName("bone_spine2")
@@ -1730,12 +1834,12 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.bone_spine1.setObjectName("bone_spine1")
         self.bone_spine1.setMaxVisibleItems(30)
         self.gridLayout_3.addWidget(self.bone_spine1, 2, 5, 2, 1)
-        self.label_8 = QtGui.QLabel(self.groupBox)
-        self.label_8.setObjectName("label_8")
-        self.gridLayout_3.addWidget(self.label_8, 2, 6, 1, 1)
-        self.label_7 = QtGui.QLabel(self.groupBox)
-        self.label_7.setObjectName("label_7")
-        self.gridLayout_3.addWidget(self.label_7, 0, 6, 1, 1)
+        self.label_spine3 = QtGui.QLabel(self.groupBox)
+        self.label_spine3.setObjectName("label_8")
+        self.gridLayout_3.addWidget(self.label_spine3, 2, 6, 1, 1)
+        self.label_sprine2 = QtGui.QLabel(self.groupBox)
+        self.label_sprine2.setObjectName("label_7")
+        self.gridLayout_3.addWidget(self.label_sprine2, 0, 6, 1, 1)
         self.bone_spine3 = QtGui.QComboBox(self.groupBox)
         self.bone_spine3.setEnabled(True)
         self.bone_spine3.setAcceptDrops(False)
@@ -1783,9 +1887,9 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         font2 = QtGui.QFont()
         font2.setPointSize(20)
         self.createfile.setFont(font2)
-	
+        
 
-	
+        
         self.createfile.setAutoFillBackground(False)
         self.createfile.setCheckable(False)
         self.createfile.setChecked(False)
@@ -1835,8 +1939,27 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.groupBox_4.setEnabled(True)
         self.groupBox_4.setObjectName("groupBox_4")
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.groupBox_4)
-        self.horizontalLayout_2.setContentsMargins(120, -1, -1, -1)
+        self.horizontalLayout_2.setContentsMargins(20, -1, -1, -1)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.line = QtGui.QFrame(self.groupBox_4)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(30)
+        sizePolicy.setHeightForWidth(self.line.sizePolicy().hasHeightForWidth())	
+        self.line.setSizePolicy(sizePolicy)
+        self.line.setMinimumSize(QtCore.QSize(0, 30))
+        self.line.setFrameShape(QtGui.QFrame.VLine)
+        self.line.setFrameShadow(QtGui.QFrame.Sunken)
+        self.line.setObjectName("line")
+        
+        self.autopick_toogle = QtGui.QCheckBox(self.groupBox_4)
+        self.autopick_toogle.setText("Toggle IK Chain Auto-Find")
+        self.horizontalLayout_2.addWidget(self.autopick_toogle)
+
+        self.horizontalLayout_2.addSpacing(30)
+        self.horizontalLayout_2.addWidget(self.line)
+
+
 
         self.toeoption = QtGui.QCheckBox(self.groupBox_4)
         self.toeoption.setEnabled(True)
@@ -1849,6 +1972,13 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.shoulderoption.setChecked(True)
         self.shoulderoption.setObjectName("shoulderoption")
         self.horizontalLayout_2.addWidget(self.shoulderoption)
+
+
+        self.Neckoption = QtGui.QCheckBox(self.groupBox_4)
+        self.Neckoption.setEnabled(True)
+        self.Neckoption.setChecked(True)
+        self.Neckoption.setText("Use Neck")
+        self.horizontalLayout_2.addWidget(self.Neckoption)
 
         self.line_2 = QtGui.QFrame(self.groupBox_4)
         self.line_2.setFrameShape(QtGui.QFrame.VLine)
@@ -1871,16 +2001,16 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         sizePolicy.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
         self.label_4.setSizePolicy(sizePolicy)
         self.label_4.setObjectName("label_4")
-	
-	
-	self.footroll_negative_checkbox = QtGui.QCheckBox(self.groupBox_4)
-	self.footroll_negative_checkbox.setEnabled(False)
-	
-	
-	
-	
-	
-	self.horizontalLayout_2.addWidget(self.footroll_negative_checkbox)
+        
+        
+        self.footroll_negative_checkbox = QtGui.QCheckBox(self.groupBox_4)
+        self.footroll_negative_checkbox.setEnabled(False)
+        
+        
+        
+        
+        
+        self.horizontalLayout_2.addWidget(self.footroll_negative_checkbox)
         self.horizontalLayout_2.addWidget(self.label_4)
         self.frame = QtGui.QFrame(self.groupBox_4)
         self.frame.setEnabled(False)
@@ -1929,16 +2059,9 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.foot_z.setObjectName("foot_z")
         self.horizontalLayout_3.addWidget(self.foot_z)
         self.horizontalLayout_2.addWidget(self.frame)
-        self.line = QtGui.QFrame(self.groupBox_4)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Minimum)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(30)
-        sizePolicy.setHeightForWidth(self.line.sizePolicy().hasHeightForWidth())
-        self.line.setSizePolicy(sizePolicy)
-        self.line.setMinimumSize(QtCore.QSize(0, 30))
-        self.line.setFrameShape(QtGui.QFrame.VLine)
-        self.line.setFrameShadow(QtGui.QFrame.Sunken)
-        self.line.setObjectName("line")
+        
+
+
         self.horizontalLayout_2.addWidget(self.line)
         self.rig_fingers_checkbox = QtGui.QCheckBox(self.groupBox_4)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Fixed)
@@ -2021,49 +2144,48 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.openfile = QtGui.QToolButton(window)
 
         self.openfile.setSizePolicy(sizePolicy)
-
-        self.openfile.setFont(font)
+        font2.setPointSize(10)
+        self.openfile.setFont(font2)
         self.openfile.setAutoFillBackground(False)
         self.openfile.setCheckable(False)
         self.openfile.setChecked(False)
         self.openfile.setObjectName("createfile")
         self.gridLayout_4.addWidget(self.openfile, 6, 0, 1, 2)
-	
-	font2.setPointSize(10)
-	self.groupBox_2.setFont(font2)
-	self.groupBox_3.setFont(font2)
-	self.groupBox.setFont(font2)
-	self.groupBox_4.setFont(font2)
+        
+        
+        self.groupBox_2.setFont(font2)
+        self.groupBox_3.setFont(font2)
+        self.groupBox.setFont(font2)
+        self.groupBox_4.setFont(font2)
 
         ##finds bones adds to lists
-	self.bonename_to_obj={}
-	
-        count=0
-        global bonelist
-        tmpDag="null"
+        self.bonename_to_obj = {}
         
-        while(tmpDag != None ):
+        count = 0
+        global bonelist
+        tmpDag = "null"
+        
+        while(tmpDag != None):
             tmpDag = sfm.NextSelectedDag()
             if tmpDag == None:
                 break
-            b=str(tmpDag).find('(')
-            e=str(tmpDag).find(')')
-            bonename=str(tmpDag)[b+1:e]
+            b = str(tmpDag).find('(')
+            e = str(tmpDag).find(')')
+            bonename = str(tmpDag)[b + 1:e]
             if "dme" in bonename.lower() :
                 continue
-	    self.bonename_to_obj[bonename]=tmpDag
+            self.bonename_to_obj[bonename] = tmpDag
             bonelist.append(bonename)
             
 
-
-         #sorts alphabetically  
+           
+         #sorts alphabetically
         bonelist.sort()
         for bonename in bonelist:#adds bones to each drop down list
             #ignores fingers
             if "finger" in bonename.lower() :
                 continue
-            self.bone_head.addItem("")
-            self.bone_head.setItemText(count,QtGui.QApplication.translate("window", bonename, None, QtGui.QApplication.UnicodeUTF8))
+            self.bone_head.addItem(bonename)            
             self.bone_footL.addItem(bonename)
             self.bone_footR.addItem(bonename)
             self.bone_spine0.addItem(bonename)
@@ -2082,50 +2204,60 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
             self.bone_lowerlegL.addItem(bonename)
             self.bone_toeR.addItem(bonename)
             self.bone_toeL.addItem(bonename)
-            self.handR.addItem(bonename)
+            self.bone_handR.addItem(bonename)
             self.bone_handL.addItem(bonename)
             self.bone_collarR.addItem(bonename)
             self.bone_collarL.addItem(bonename)
-            count+=1
+            
 
 
         QtCore.QObject.connect(self.footroll_checkbox, QtCore.SIGNAL("toggled(bool)"), self.frame.setEnabled)
         QtCore.QObject.connect(self.finger_checkBox, QtCore.SIGNAL("toggled(bool)"), self.frame_2.setEnabled)
         QtCore.QObject.connect(self.footroll_checkbox, QtCore.SIGNAL("toggled(bool)"), self.label_4.setEnabled)
         QtCore.QObject.connect(self.finger_checkBox, QtCore.SIGNAL("toggled(bool)"), self.label_25.setEnabled)
-	QtCore.QObject.connect(self.footroll_checkbox, QtCore.SIGNAL("toggled(bool)"), self.footroll_negative_checkbox.setEnabled)
-	
-	
-	#for autofind
-	self.label_16.setEnabled(False)
-	self.label_22.setEnabled(False)
-	self.label_23.setEnabled(False)
-	self.label_21.setEnabled(False)
-	self.label_24.setEnabled(False)
-	self.label_9.setEnabled(False)
-	self.label_14.setEnabled(False)
-	self.label_10.setEnabled(False)	
-	
-	
-	self.bone_lowerlegR.setEnabled(False)
-	self.bone_upperlegL.setEnabled(False)
-	self.bone_lowerarmL.setEnabled(False)
-	self.bone_upperarmL.setEnabled(False)
-	self.bone_lowerarmR.setEnabled(False)
-	self.upperarmR.setEnabled(False)
-	self.bone_lowerlegL.setEnabled(False)
-	self.bone_upperlegR.setEnabled(False)
-	
-	
-	self.bone_handL.currentIndexChanged.connect(lambda: self.autofind(self.bone_handL,self.bone_lowerarmL,self.bone_upperarmL))
-	self.handR.currentIndexChanged.connect(lambda: self.autofind(self.handR,self.bone_lowerarmR,self.upperarmR))	
-	self.bone_footL.currentIndexChanged.connect(lambda: self.autofind(self.bone_footL,self.bone_lowerlegL,self.bone_upperlegL))	
-	self.bone_footR.currentIndexChanged.connect(lambda: self.autofind(self.bone_footR,self.bone_lowerlegR,self.bone_upperlegR))
-	##
-	
-	
-	
-	
+        QtCore.QObject.connect(self.footroll_checkbox, QtCore.SIGNAL("toggled(bool)"), self.footroll_negative_checkbox.setEnabled)
+        QtCore.QObject.connect(self.Neckoption, QtCore.SIGNAL("toggled(bool)"), self.bone_neck.setEnabled)
+        QtCore.QObject.connect(self.Neckoption, QtCore.SIGNAL("toggled(bool)"), self.label_3.setEnabled)
+
+
+
+        
+        
+        
+        
+        #for ik autofind
+        
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.label_16.setDisabled)
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.label_22.setDisabled)
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.label_23.setDisabled)
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.label_21.setDisabled)
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.label_24.setDisabled)
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.label_9.setDisabled)
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.label_14.setDisabled)
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.label_10.setDisabled)
+        
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.bone_lowerlegR.setDisabled)
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.bone_upperlegL.setDisabled)
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.bone_lowerarmL.setDisabled)
+        
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.bone_upperarmL.setDisabled)
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.bone_lowerarmR.setDisabled)
+        
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.upperarmR.setDisabled)
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.bone_lowerlegL.setDisabled)
+        QtCore.QObject.connect(self.autopick_toogle, QtCore.SIGNAL("toggled(bool)"), self.bone_upperlegR.setDisabled)
+
+        
+        
+        self.bone_handL.currentIndexChanged.connect(lambda: self.autofind(self.bone_handL,self.bone_lowerarmL,self.bone_upperarmL))
+        self.bone_handR.currentIndexChanged.connect(lambda: self.autofind(self.bone_handR,self.bone_lowerarmR,self.upperarmR))	
+        self.bone_footL.currentIndexChanged.connect(lambda: self.autofind(self.bone_footL,self.bone_lowerlegL,self.bone_upperlegL))	
+        self.bone_footR.currentIndexChanged.connect(lambda: self.autofind(self.bone_footR,self.bone_lowerlegR,self.bone_upperlegR))
+        self.autopick_toogle.clicked.connect(lambda: self.autopick_toogle_checked())
+        
+        ##
+
+        
         
         self.retranslateUi(window)
 
@@ -2137,7 +2269,7 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
             self.openfile.clicked.connect(lambda: self.opensave())
         except IOError as e:
             self.error("There was an error opening the file",e)
-        #hides unused  bones
+        #hides unused bones
         self.sp1.clicked.connect(lambda: self.hide())
         self.sp2.clicked.connect(lambda: self.hide())
         self.sp3.clicked.connect(lambda: self.hide())
@@ -2147,12 +2279,12 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         #self.rig_fingers_checkbox.clicked.connect(lambda: self.rigfingers())
         #calls auto find method
         self.find(bonelist)
-
+        
 
         
 #creates ui
     def retranslateUi(self, window):
-        window.setWindowTitle(QtGui.QApplication.translate("window", "Auto-Rigger V1.9", None, QtGui.QApplication.UnicodeUTF8))
+        window.setWindowTitle(QtGui.QApplication.translate("window", "Auto-Rigger V1.9.3", None, QtGui.QApplication.UnicodeUTF8))
 
         self.groupBox_2.setTitle(QtGui.QApplication.translate("window", "Left-side", None, QtGui.QApplication.UnicodeUTF8))
         self.label_22.setText(QtGui.QApplication.translate("window", "<html><head/><body><p align=\"right\">boneUpperLegL</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
@@ -2176,16 +2308,22 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.toeoption.setText(QtGui.QApplication.translate("window", "use toe bones", None, QtGui.QApplication.UnicodeUTF8))
         self.shoulderoption.setText(QtGui.QApplication.translate("window", "use collar bones", None, QtGui.QApplication.UnicodeUTF8))
         self.groupBox.setTitle(QtGui.QApplication.translate("window", "Spine Options", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_6.setText(QtGui.QApplication.translate("window", "<html><head/><body><p align=\"right\">spine1</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_8.setText(QtGui.QApplication.translate("window", "<html><head/><body><p align=\"right\">spine3</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_7.setText(QtGui.QApplication.translate("window", "<html><head/><body><p align=\"right\">spine2</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_spine1.setText(QtGui.QApplication.translate("window", "<html><head/><body><p align=\"right\">spine1</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_spine3.setText(QtGui.QApplication.translate("window", "<html><head/><body><p align=\"right\">spine3</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_sprine2.setText(QtGui.QApplication.translate("window", "<html><head/><body><p align=\"right\">spine2</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.sp4.setText(QtGui.QApplication.translate("window", "4 spine bones", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("window", "<html><head/><body><p align=\"right\">spine0</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.sp2.setText(QtGui.QApplication.translate("window", "2 spine bones", None, QtGui.QApplication.UnicodeUTF8))
         self.sp3.setText(QtGui.QApplication.translate("window", "3 spine bones", None, QtGui.QApplication.UnicodeUTF8))
-        #self.cfg.setToolTip(QtGui.QApplication.translate("window", "Creates a text file that SFM uses to organizes\nyour models control groups", None, QtGui.QApplication.UnicodeUTF8))
-        #self.cfg.setText(QtGui.QApplication.translate("window", "create animation groups", None, QtGui.QApplication.UnicodeUTF8))
-        #self.createfile.setWhatsThis(QtGui.QApplication.translate("window", "<html><head/><body><p><span style=\" font-size:2pt;\">fh</span></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        #self.cfg.setToolTip(QtGui.QApplication.translate("window", "Creates a
+        #text file that SFM uses to organizes\nyour models control groups",
+        #None, QtGui.QApplication.UnicodeUTF8))
+        #self.cfg.setText(QtGui.QApplication.translate("window", "create
+        #animation groups", None, QtGui.QApplication.UnicodeUTF8))
+        #self.createfile.setWhatsThis(QtGui.QApplication.translate("window",
+        #"<html><head/><body><p><span style=\"
+        #font-size:2pt;\">fh</span></p></body></html>", None,
+        #QtGui.QApplication.UnicodeUTF8))
         self.createfile.setText(QtGui.QApplication.translate("window", "Create Script", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("window", "<html><head/><body><p align=\"right\">Head</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("window", "<html><head/><body><p align=\"right\">Neck</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
@@ -2193,9 +2331,9 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
         self.openfile.setText(QtGui.QApplication.translate("window", "Load Rig Script", None, QtGui.QApplication.UnicodeUTF8))
         self.footroll_checkbox.setToolTip(QtGui.QApplication.translate("window", "<html><head/><body><p>creates a channel to make posing foot for walking easier.</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.footroll_checkbox.setText(QtGui.QApplication.translate("window", "add footroll", None, QtGui.QApplication.UnicodeUTF8))
-	
-	
-	self.footroll_negative_checkbox.setText(QtGui.QApplication.translate("window", "Negative value", None, QtGui.QApplication.UnicodeUTF8))
+        
+        
+        self.footroll_negative_checkbox.setText(QtGui.QApplication.translate("window", "Negative value", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("window", "foot Axis:", None, QtGui.QApplication.UnicodeUTF8))
         self.foot_x.setToolTip(QtGui.QApplication.translate("window", "red", None, QtGui.QApplication.UnicodeUTF8))
         self.foot_x.setText(QtGui.QApplication.translate("window", "X", None, QtGui.QApplication.UnicodeUTF8))
@@ -2223,7 +2361,6 @@ def BuildRig(num,toe,collar,bone,footroll,fingeropton,handpreset):
 #==================================================================================================
 # Script entry
 #==================================================================================================
-
 if __name__ == "__main__":
     
 
