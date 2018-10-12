@@ -7,7 +7,7 @@
 #feel free to modify the script for your own use
 #find any bugs or suggestions message me in the workshop page comments
 from PySide import QtCore, QtGui
-import vs, os,ast, sys
+import vs, os,ast, sys,re
 #get model name and store file name
 animSet = sfm.GetCurrentAnimationSet()
 gameModel = animSet.gameModel
